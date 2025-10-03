@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
-import dj_database_url  # if using Postgres
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -100,15 +99,6 @@ DATABASES = {
         'NAME': BASE_DIR / "db.sqlite3",
     }
 }
-
-# ✅ If DATABASE_URL is provided (like on Render), use it
-DATABASE_URL = os.getenv("DATABASE_URL")
-if DATABASE_URL:
-    DATABASES['default'] = dj_database_url.config(
-        default=DATABASE_URL,
-        conn_max_age=600,
-        ssl_require=True
-    )
 
 
 # Password validation
