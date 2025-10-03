@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Document</title>
+</head>
+<body>
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Your Work</h4>
+    <!-- Back button -->
+    <a href="{% url 'students:class_detail' id=work_list.0.assignment.class_obj.id %}" 
+       class="btn btn-outline-secondary btn-sm">
+      ← Back to Classwork
+    </a>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">Assignments</h5>
+    </div>
+    <ul class="list-group list-group-flush">
+      {% for item in work_list %}
+        {% with assignment=item.assignment submission=item.submission %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ assignment.title }}</strong>
+            <div class="small text-muted">
+              Due: 
+              {% if assignment.due_date %}
+                {{ assignment.due_date|date:"M d, Y" }}
+              {% else %}
+                No due date
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="text-end">
+  {% if submission %}
+    {% if submission.is_returned %}
+      <span class="badge bg-success">
+        Graded: {{ submission.grade }}/{{ assignment.points }}
+      </span>
+    {% elif submission.excused %}
+      <span class="badge bg-secondary">Excused</span>
+    {% elif submission.turned_in %}
+      <span class="badge bg-warning text-dark">Turned in (Pending grade)</span>
+    {% else %}
+      <span class="badge bg-info text-dark">Draft</span>
+    {% endif %}
+  {% else %}
+    <span class="badge bg-danger">Not submitted</span>
+  {% endif %}
+</div>
+
+        </li>
+        {% endwith %}
+      {% empty %}
+        <li class="list-group-item text-muted text-center">No assignments yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+</body>
+</html>

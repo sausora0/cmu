@@ -1,0 +1,13 @@
+<h2>Welcome, {{ request.user.get_full_name }}</h2>
+
+<h3>Your Children:</h3>
+{% if children %}
+  <ul>
+    {% for child in children %}
+      <li>{{ child.get_full_name }} ({{ child.username }})</li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No students linked yet.</p>
+{% endif %}
+

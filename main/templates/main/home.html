@@ -1,0 +1,244 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'main/home.css' %}">
+    <link rel="icon" href="{% static 'images/logo.png' %>}">
+    <title>Smart Learning System - City of Malabon University</title>
+
+</head>
+<body>
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="university-logo">
+                    <img src='{% static "images/logo.png" %}'alt="City of Malabon University Logo">
+                </div>
+                <h1>Smart Learning System</h1>
+                <p>A revolutionary platform for monitoring and supporting student learning at City of Malabon University, enhancing collaboration among students, teachers, and parents through intelligent data-driven insights.</p>
+                <div class="cta-buttons">
+                    <a href="#features" class="btn btn-primary">🚀 Explore Features</a> 
+                    <a href="#stakeholders" class="btn btn-secondary">👥 Learn More</a>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">↓</div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">System Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Real-Time Analytics</h3>
+                    <p>Advanced monitoring dashboards provide instant insights into student performance, attendance, and learning progress with interactive visualizations and predictive analytics.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤝</div>
+                    <h3>Collaborative Platform</h3>
+                    <p>Seamlessly connects students, teachers, and parents through integrated communication tools, shared resources, and collaborative learning environments.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Personalized Learning</h3>
+                    <p>AI-driven recommendations and adaptive learning paths tailored to each student's unique needs, learning style, and academic goals.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Mobile Accessibility</h3>
+                    <p>Cross-platform mobile application ensures 24/7 access to learning resources, notifications, and system features from any device.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Secure & Private</h3>
+                    <p>Enterprise-grade security protocols protect sensitive student data while maintaining FERPA compliance and privacy standards.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Smart Notifications</h3>
+                    <p>Intelligent alert system keeps all stakeholders informed about important updates, deadlines, and achievements in real-time.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="stakeholders" class="stakeholders">
+        <div class="container">
+            <h2 class="section-title">Empowering Every Stakeholder</h2>
+            <div class="stakeholders-grid">
+                <div class="stakeholder-card">
+                    <div class="stakeholder-icon">🎓</div>
+                    <h3>Students</h3>
+                    <p>Access personalized learning dashboards, track academic progress, collaborate with peers, submit assignments digitally, and receive instant feedback on performance metrics.</p>
+                </div>
+                <div class="stakeholder-card">
+                    <div class="stakeholder-icon">👨‍🏫</div>
+                    <h3>Teachers</h3>
+                    <p>Monitor classroom analytics, create interactive assignments, provide targeted feedback, identify at-risk students early, and streamline grading processes with automated tools.</p>
+                </div>
+                <div class="stakeholder-card">
+                    <div class="stakeholder-icon">👨‍👩‍👧‍👦</div>
+                    <h3>Parents</h3>
+                    <p>Stay connected with real-time updates on academic progress, attendance records, upcoming events, and direct communication channels with teachers and administrators.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="benefits">
+        <div class="container">
+            <h2 class="section-title">System Benefits</h2>
+            <div class="benefits-list">
+                <div class="benefit-item">
+                    <div class="benefit-icon">✅</div>
+                    <div>
+                        <h4>Improved Academic Performance</h4>
+                        <p>Data-driven insights help identify learning gaps and provide targeted interventions to boost student success rates.</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">📈</div>
+                    <div>
+                        <h4>Enhanced Communication</h4>
+                        <p>Streamlined communication channels foster better relationships between all educational stakeholders.</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">⏰</div>
+                    <div>
+                        <h4>Time Efficiency</h4>
+                        <p>Automated processes reduce administrative burden, allowing educators to focus on teaching and learning.</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">🎯</div>
+                    <div>
+                        <h4>Early Intervention</h4>
+                        <p>Predictive analytics identify at-risk students early, enabling timely support and intervention strategies.</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">📊</div>
+                    <div>
+                        <h4>Data-Driven Decisions</h4>
+                        <p>Comprehensive analytics support evidence-based decision making for curriculum and policy improvements.</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">🌟</div>
+                    <div>
+                        <h4>Student Engagement</h4>
+                        <p>Interactive features and gamification elements increase student motivation and participation in learning activities.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <h2 class="section-title">Ready to Transform Education?</h2>
+            <p style="font-size: 1.2rem; margin-bottom: 30px; opacity: 0.9;">Join City of Malabon University in revolutionizing the educational experience through smart technology and collaborative learning.</p>
+            <div class="buttons">
+                <a href="{% url 'accounts:login' %}" class="btn btn-secondary">🚀 Get Started Today</a>
+                <a href="{% url 'contact' %}" class="btn btn-primary">📞 Contact Support</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 City of Malabon University Smart Learning System. All rights reserved.</p>
+            <p>Empowering education through intelligent collaboration and data-driven insights.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll-based animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards and sections
+        document.querySelectorAll('.feature-card, .stakeholder-card, .benefit-item').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'all 0.6s ease-out';
+            observer.observe(el);
+        });
+
+        // Add interactive hover effects
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.background = 'linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%)';
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.background = 'white';
+            });
+        });
+
+        // Dynamic particle effect for hero section
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.style.position = 'absolute';
+            particle.style.width = '4px';
+            particle.style.height = '4px';
+            particle.style.background = 'rgba(255, 255, 255, 0.5)';
+            particle.style.borderRadius = '50%';
+            particle.style.left = Math.random() * window.innerWidth + 'px';
+            particle.style.top = window.innerHeight + 'px';
+            particle.style.pointerEvents = 'none';
+            particle.style.animation = 'floatUp 8s linear forwards';
+            
+            document.querySelector('.hero').appendChild(particle);
+            
+            setTimeout(() => {
+                particle.remove();
+            }, 8000);
+        }
+
+        // Add CSS for floating particles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes floatUp {
+                to {
+                    transform: translateY(-${window.innerHeight + 100}px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Create particles periodically
+        setInterval(createParticle, 1000);
+    </script>
+</body>
+</html>

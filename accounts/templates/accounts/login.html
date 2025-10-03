@@ -1,0 +1,300 @@
+{% load static %}
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - CMU LMS</title>
+    <link rel="stylesheet" href="{% static 'main/login.css' %}">
+    <style>
+        :root {
+            --primary: #2d6cdf;
+            --accent: #7EA6FF;
+            --dark: #004080;
+            --background: #f5f7fa;
+            --radius: 14px;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            width: 100vw;
+        }
+        body {
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            color: #232e3a;
+            min-height: 100vh;
+            width: 100vw;
+            background: url("{% static 'images/background.jpg' %}") center center / cover no-repeat fixed, var(--background);
+            position: relative;
+        }
+        header {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            padding: 0.5em 1.5em;
+            background: transparent;
+            /* No blur, no opacity, no overlay! */
+        }
+        .logo-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .logo-img {
+            height: 38px;
+            width: auto;
+        }
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--dark);
+        }
+        .container {
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(245, 247, 250, 0.72); /* overlay for contrast */
+            position: absolute;
+            top: 0; left: 0;
+        }
+        .login-box {
+            display: flex;
+            background: rgba(255,255,255,0.97);
+            border-radius: var(--radius);
+            box-shadow: 0 8px 32px rgba(30, 41, 59, 0.13);
+            max-width: 750px;
+            width: 100%;
+            margin: 48px 10px;
+            overflow: hidden;
+            height: 75vh;
+        }
+        .login-left {
+            background: linear-gradient(135deg, #7EA6FF 0%, #4B6499 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 300px;
+            min-width: 0;
+            padding: 34px 18px;
+        }
+        .login-left img {
+            width: 150px;
+            max-width: 80vw;
+            margin-bottom: 18px;
+        }
+        .login-right {
+            flex: 1;
+            padding: 48px 32px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 240px;
+            background: transparent;
+            
+        }
+        .login-right h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .login-right p {
+            margin: 0 0 20px 0;
+            color: #444;
+            font-size: 1.13rem;
+        }
+        .login-form label {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 3px;
+            display: block;
+        }
+        .login-form input[type="text"],
+        .login-form input[type="password"] {
+            width: 100%;
+            border: 1.2px solid #d1d5db;
+            border-radius: 6px;
+            padding: 11px 12px;
+            font-size: 1.06rem;
+            background: #f8fafc;
+            margin-bottom: 14px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border 0.18s;
+        }
+        .login-form input:focus {
+            border-color: var(--primary);
+            background: #eef3fa;
+        }
+        .login-form .remember-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+        .login-form .forgot {
+            font-size: 0.97rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .login-form .forgot:hover { text-decoration: underline; }
+        .login-form button {
+            width: 100%;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 13px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 17px;
+            box-shadow: 0 3px 12px 0 rgba(44, 69, 135, 0.09);
+            transition: background 0.19s;
+        }
+        .login-form button:hover { background: var(--accent); }
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: #7EA6FF;
+            margin: 10px 0 18px 0;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1.2px solid #cfd8dc;
+        }
+        .divider:not(:empty)::before { margin-right: .75em; }
+        .divider:not(:empty)::after { margin-left: .75em; }
+        .social-login {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .social-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f6f8fb;
+            border: 1.2px solid #cfd8dc;
+            border-radius: 7px;
+            padding: 10px 22px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.19s, border 0.19s;
+            text-decoration: none;
+            color: #232e3a;
+            box-shadow: 0 1px 3px rgba(30,41,59,0.04);
+        }
+        .social-btn:active, .social-btn:focus, .social-btn:hover {
+            background: #e6ecfa;
+            border-color: var(--primary);
+        }
+        .social-btn img {
+            width: 22px;
+            height: 22px;
+        }
+        .error {
+            color: #e74c3c;
+            background: #fff3f3;
+            border: 1px solid #ffd6d6;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 18px;
+            text-align: center;
+            font-size: 1rem;
+        }
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
+            .login-box { max-width: 99vw; }
+            .login-left { padding: 28px 10px; }
+            .login-right { padding: 32px 10px; }
+        }
+        @media (max-width: 700px) {
+            .login-box {
+                flex-direction: column;
+                max-width: 99vw;
+                width: 98vw;
+                border-radius: 10px;
+                margin: 32px 0;
+            }
+            .login-left {
+                width: 100%;
+                padding: 18px 0 8px 0;
+                min-height: unset;
+            }
+            .login-right {
+                padding: 20px 5vw 22px 5vw;
+            }
+        }
+        @media (max-width: 480px) {
+            .login-box { border-radius: 0; margin: 0 0 20px 0; }
+            .login-left img { width: 90px; }
+            .login-right h2 { font-size: 1.2rem; }
+            .login-right p { font-size: 0.98rem; }
+            .social-btn { font-size: 0.93rem; padding: 9px 10px; }
+        }
+    </style>
+</head>
+<body>
+<!-- HEADER IS OUTSIDE THE CONTAINER -->
+<header>
+    <a href="{% url 'home' %}" class="logo-link">
+        <img src="{% static 'images/logo.png' %}" alt="CMU Logo" class="logo-img">
+        <span class="logo-text">CMU LMS</span>
+    </a>
+</header>
+<!-- CONTAINER IS BELOW HEADER, WITH OVERLAY -->
+<div class="container">
+    <div class="login-box">
+        <div class="login-left">
+            <img src="{% static 'images/cmu.jpg' %}" alt="CMU Shield">
+            <img src="{% static 'images/Font.jpg' %}" alt="CMU Font">
+        </div>
+        <div class="login-right">
+            <h2>Welcome back!</h2>
+            <p>Sign in with your CMU Account:</p>
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+            <form class="login-form" method="post" autocomplete="off" action="{% url 'accounts:login' %}">
+                {% csrf_token %}
+                
+                <!-- Dummy hidden fields to trick Chrome/Edge autofill -->
+                <input type="text" style="display:none">
+                <input type="password" style="display:none">
+
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" placeholder="Username" required autocomplete="off">
+
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" placeholder="Password" required autocomplete="new-password">
+
+                <div class="remember-row">
+                    <a href="#" class="forgot">Forgot your password?</a>
+                </div>
+                <button type="submit">Sign in</button>
+            </form>
+            <div class="divider">or</div>
+            <div class="social-login">
+                <a href="{% provider_login_url 'google' %}" class="social-btn">
+                    <img src="https://img.icons8.com/color/24/000000/google-logo.png" alt="Google" />Google
+                </a>
+                <a href="#" class="social-btn">
+                    <img src="https://img.icons8.com/color/24/000000/microsoft.png" alt="Microsoft" />Microsoft
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

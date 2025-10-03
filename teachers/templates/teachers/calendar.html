@@ -1,0 +1,580 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Event Calendar</title>
+  
+  <link rel="stylesheet" href="{% static 'teachers/dashboard.css' %}">
+  <!-- Bootstrap CSS -->
+   <!-- ✅ Font Awesome (latest) -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .calendar-container { background: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; margin-top: 20px; 
+    } .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; 
+    } .day-name { font-weight: bold; text-align: center; color: #444; }
+     .day-cell { min-height: 80px; background: #f9fafb; border-radius: 6px; padding: 4px; font-size: 0.9rem; position: relative; 
+    } .day-cell.today { background: #2563eb; color: white; 
+    } .event-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; 
+    } .event-item { border-left: 5px solid #2563eb; background: #f8fafc; padding: 10px; margin-bottom: 8px; border-radius: 6px;
+    } .event-item.exam { border-color: #dc2626; 
+    } .event-item.holiday { border-color: #f59e0b;
+     } .event-item.meeting { border-color: #16a34a; 
+    } .event-item.announcement { border-color: #2563eb; 
+    }
+    .today {
+      background: #e0f7fa;
+      border: 2px solid #0288d1;
+    }
+    .sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, #1e40af, #3b82f6);
+    color: #fff;
+    height: 100vh;
+    position: fixed;
+    left: 0; top: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.28s cubic-bezier(.4,2,.7,.9);
+    overflow: hidden;
+}
+.sidebar.closed {
+    width: 65px;
+}
+.sidebar .logo {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.1);
+    transition: padding .3s;
+}
+.sidebar.closed .logo { padding: 20px 12px; }
+.logo img {
+    width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; transition: margin 0.3s;
+}
+.sidebar.closed .logo img { margin-right: 0; }
+.cmu-logo {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    white-space: nowrap;
+    transition: opacity 0.18s, width 0.18s;
+}
+.sidebar.closed .cmu-logo {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+/* Nav styles */
+.nav-menu { flex: 1; padding: 16px 0;}
+.nav-item {
+    display: flex; align-items: center; padding: 16px 24px;
+    color: white; text-decoration: none;
+    transition: all 0.22s;
+    font-size: 0.97rem; font-weight: 500;
+    white-space: nowrap;
+}
+.nav-item i { margin-right: 15px; color: white; min-width: 21px;}
+.sidebar.closed .nav-item { justify-content: center; padding: 16px 0; }
+.sidebar.closed .nav-item i { margin-right: 0;}
+.sidebar.closed .nav-item .nav-label { display: none; }
+.nav-item .nav-label { display: inline; transition: opacity 0.2s;}
+/* Hide nav-label if sidebar closed */
+.sidebar.closed .nav-item .nav-label { display: none; }
+/* Dropdown and teaching */
+.dropdown-container { position: relative; }
+.sidebar.closed .dropdown-container .teaching-header { justify-content: center; }
+.sidebar.closed .dropdown-arrow,
+.sidebar.closed .class-count,
+.sidebar.closed .teaching-content span,
+.sidebar.closed .teaching-content .nav-label { display: none !important; }
+.sidebar.closed .subjects-container { display: none !important; }
+.teaching-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.teaching-header:hover { transform: translateY(-1px); }
+.teaching-header.active { background: rgba(255,255,255,0.1); border-radius: 8px; }
+.teaching-content { display: flex; align-items: center; color: white; }
+.teaching-content i {
+    width: 32px; height: 32px; border-radius: 50%; margin-right: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 16px; color: white;
+}
+.dropdown-arrow { color: white; font-size: 14px; transition: transform 0.3s ease; }
+.dropdown-arrow.rotated { transform: rotate(180deg); }
+.subjects-container {
+    overflow: hidden; transition: max-height 0.4s ease, opacity 0.3s ease; max-height: 0; opacity: 0; margin-top: 0;
+}
+.subjects-container.expanded { max-height: 500px; opacity: 1; margin-top: 12px; }
+.subject-item {
+    display: flex; align-items: center; background: transparent; margin-bottom: 8px; padding: 14px 16px; border-radius: 50px; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);
+}
+.subject-item:last-child { margin-bottom: 0; }
+.subject-item:hover { background: rgba(255,255,255,0.1); transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
+.subject-avatar { width: 24px; height: 24px; border-radius: 50%; background: #74b9ff; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: 600; font-size: 12px; color: white;}
+.subject-content { flex: 1;}
+.subject-name { color: white; font-weight: 600; font-size: 16px; margin: 0;}
+.subject-details { color: rgba(255,255,255,0.7); font-size: 12px; margin: 2px 0 0 0;}
+.class-count { background: rgba(255,255,255,0.2); color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+.delete-subject-btn { background: rgba(220,38,38,0.8); color: white; border: none; width: 20px; height: 20px; border-radius: 50%; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; margin-left: 8px;}
+.delete-subject-btn:hover { background: rgba(220,38,38,1); transform: scale(1.1); }
+/* Container transition */
+.subjects-container {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, padding 0.3s ease-in-out;
+    padding: 0 10px;
+}
+
+.subjects-container.expanded {
+    max-height: 500px; /* enough to fit multiple classes */
+    padding: 10px;
+}
+
+/* Arrow rotation */
+.dropdown-arrow {
+    transition: transform 0.3s ease;
+}
+
+.dropdown-arrow.rotate {
+    transform: rotate(180deg);
+}
+
+/* Each class item */
+.subject-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    transition: background 0.2s;
+}
+
+.subject-item:hover {
+    background: #f2f2f268;
+}
+
+.delete-form {
+    margin-left: 10px;
+}
+
+.delete-btn {
+    background: transparent;
+    border: none;
+    color: #dc3545; /* red */
+    font-size: 18px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.delete-btn:hover {
+    color: #a71d2a; /* darker red on hover */
+}
+.dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        bottom: 100%;  /* makes it appear above footer */
+        right: 0;
+        background: #fff;
+        min-width: 150px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        border-radius: 6px;
+        z-index: 10;
+    }
+
+    .dropdown-menu a {
+        display: block;
+        padding: 8px 12px;
+        text-decoration: none;
+        color: #333;
+        font-size: 14px;
+    }
+
+    .dropdown-menu a:hover {
+        background: #f5f5f5;
+    }
+
+    .dropdown.active .dropdown-menu {
+        display: block;
+    }
+
+/* Sidebar hover trigger area */
+.sidebar-hover-area {
+    position: fixed;
+    left: 0; top: 0;
+    width: 22px; height: 100vh;
+    z-index: 1050;
+    background: transparent;
+}
+
+/* Main content */
+.main-content {
+    margin-left: 280px;
+    transition: margin-left 0.28s cubic-bezier(.4,2,.7,.9);
+}
+.sidebar.closed ~ .main-content {
+    margin-left: 65px;
+}
+  </style>
+</head>
+<body>
+ <!-- Sidebar Hover Area for mouse entry -->
+<div class="sidebar-hover-area" id="sidebarHoverArea"></div>
+<!-- Sidebar -->
+<div class="sidebar closed" id="sidebar">
+    <div class="logo">
+        <img src="{% static 'images/cmu.jpg' %}" alt="CMU Logo">
+        <div class="cmu-logo">City of Malabon University</div>
+    </div>
+    <nav class="nav-menu">
+        <a href="{% url 'teachers:dashboard' %}" class="nav-item"><i class="fas fa-home"></i><span class="nav-label">Home</span></a>
+        <a href="{% url 'teachers:calendar' %}" class="nav-item"><i class="fas fa-calendar"></i><span class="nav-label">Event Calendar</span></a>
+        <div class="dropdown-container">
+            <div class="teaching-header" id="teachingHeader">
+                <div class="teaching-content">
+                    <i class="fas fa-chalkboard-user"></i>
+                    <span class="nav-label">Teaching</span>
+                    <span class="class-count" id="classCount">
+                        {{ classes.count }} class{{ classes.count|pluralize }}
+                    </span>
+                </div>
+                <i class="fas fa-chevron-down dropdown-arrow" id="dropdownArrow"></i>
+            </div>
+            <div class="subjects-container" id="subjectsContainer">
+                {% if classes %}
+            {% for class in classes %}
+                <div class="subject-item" onclick="location.href='{% url 'teachers:subject' class.id %}'">
+                    <div class="subject-avatar">{{ class.class_name|first|upper }}</div>
+                    <div class="subject-content">
+                        <div class="subject-name">{{ class.class_name }}</div>
+                        <div class="subject-details">
+                            {{ class.section|default:"No section" }}
+                        </div>
+                    </div>
+                 <!-- Delete button -->
+                <form method="POST" action="{}" 
+                      onsubmit="return confirm('Are you sure you want to delete this class?');" 
+                      class="delete-form">
+                    {% csrf_token %}
+                    <button type="submit" class="delete-btn">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </form>
+                     
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-state" id="emptyState">
+                No classes created yet. Click + to create your first class!
+            </div>
+            {% endif %}
+        </div>
+        </div>
+        <a href="{% url 'teachers:announcement_list' %}" class="nav-item"><i class="fas fa-bullhorn"></i><span class="nav-label">Announcement</span></a>
+        <a href="{% url 'teachers:messages_inbox' %}" class="nav-item"><i class="fas fa-comments"></i><span class="nav-label">Messages</span></a>
+        <a href="{% url 'teachers:archived_classes' %}" class="nav-item"><i class="fas fa-archive"></i><span class="nav-label">Archived Classes</span></a>
+        <a href="#" class="nav-item"><i class="fas fa-cog"></i><span class="nav-label">Settings</span></a>
+        <a href="{% url 'account_logout' %}" class="nav-item"><i class="fas fa-sign-out-alt"></i><span class="nav-label">Logout</span></a>
+    </nav>
+</div>
+ <!-- Main Content Area -->
+<div class="main-content">
+    <!-- ...[Your main content unchanged]... -->
+    <!-- Header -->
+    <header class="header">
+      <h5>📅 CMU CALENDAR</h5>
+        <div class="search-bar"></div>
+        <div class="header-right">
+            <i class="fas fa-bell notification-icon"></i>
+            <div class="user-profile">
+                <span>{{ user.first_name }}</span>
+                <div class="user-avatar">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="User Avatar">
+                    {% else %}
+                        <img src="{% static 'images/user.jpg' %}" alt="User Avatar">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+<div class="container mt-4">
+  <div class="row">
+    <!-- 📅 Calendar -->
+    <div class="col-md-8">
+      <div class="calendar-container card p-3 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <button class="btn btn-outline-secondary btn-sm" onclick="prevMonth()">⏮ Prev</button>
+          <h4 id="calendarTitle" class="mb-0 text-center flex-grow-1">Calendar</h4>
+          <div>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEventModal">
+              ➕ Add Event
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="nextMonth()">Next ⏭</button>
+          </div>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div id="calendarGrid" class="calendar-grid"></div>
+      </div>
+    </div>
+
+    <!-- 📋 Upcoming Events -->
+     <!-- 📋 Events This Month -->
+    <div class="col-md-4">
+      <div class="calendar-container">
+        <h4>📋 Events This Month</h4>
+        <div id="eventList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<!-- Modal (outside container) -->
+<!-- Modal -->
+<div class="modal fade" id="addEventModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fa fa-calendar-plus"></i> Add Event</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Event Title</label>
+            {{ form.title }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Date</label>
+            {{ form.date }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Event Type</label>
+            {{ form.event_type }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            {{ form.description }}
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- Bootstrap JS (Bundle includes Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+ // Calendar Rendering
+  const calendarGrid = document.getElementById("calendarGrid");
+  const eventList = document.getElementById("eventList");
+  const monthNames = ["January","February","March","April","May","June","July",
+                      "August","September","October","November","December"];
+  const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+  const events = [
+    {% for event in events %}
+      {
+        title: "{{ event.title|escapejs }}",
+        date: "{{ event.date }}",
+        type: "{{ event.event_type }}",
+        description: "{{ event.description|default_if_none:''|escapejs }}"
+      },
+    {% endfor %}
+  ];
+
+  let currentMonth = new Date().getMonth();
+  let currentYear = new Date().getFullYear();
+
+  function renderCalendar(month, year) {
+    calendarGrid.innerHTML = "";
+    calendarTitle.textContent = monthNames[month] + " " + year;
+
+    // Filter events for this month
+    const monthlyEvents = events.filter(e => {
+      const ed = new Date(e.date);
+      return ed.getMonth() === month && ed.getFullYear() === year;
+    });
+
+    // Day Names
+    dayNames.forEach(d => {
+      const div=document.createElement("div");
+      div.className="day-name";
+      div.textContent=d;
+      calendarGrid.appendChild(div);
+    });
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const today = new Date();
+
+    // Empty cells before first day
+    for (let i=0;i<firstDay;i++) {
+      calendarGrid.appendChild(document.createElement("div"));
+    }
+
+    // Fill days
+    for (let d=1; d<=daysInMonth; d++) {
+      const cell=document.createElement("div");
+      cell.className="day-cell";
+      cell.textContent=d;
+
+      if (d===today.getDate() && month===today.getMonth() && year===today.getFullYear()) {
+        cell.classList.add("today");
+      }
+
+      // Match events (for this day in current month)
+      const eventForDay = monthlyEvents.filter(ev => {
+        const ed = new Date(ev.date);
+        return ed.getDate()===d;
+      });
+
+      eventForDay.forEach(ev => {
+        const dot=document.createElement("span");
+        dot.className="event-dot";
+        dot.style.backgroundColor = 
+          ev.type==="exam" ? "#dc2626" :
+          ev.type==="holiday" ? "#f59e0b" :
+          ev.type==="meeting" ? "#16a34a" : "#2563eb";
+        cell.appendChild(document.createElement("br"));
+        cell.appendChild(dot);
+        cell.append(ev.title);
+      });
+
+      calendarGrid.appendChild(cell);
+    }
+
+    // --- Sidebar Monthly List ---
+    eventList.innerHTML = "";
+    if (monthlyEvents.length === 0) {
+      eventList.innerHTML = "<p class='text-muted'>No events this month.</p>";
+    } else {
+      monthlyEvents.forEach(ev => {
+        const div = document.createElement("div");
+        div.className = "event-item " + ev.type;
+        div.innerHTML = `<strong>${ev.title}</strong>
+                         <small class="text-muted"> (${ev.type})</small><br>
+                         📆 ${ev.date}<br>
+                         ${ev.description}`;
+        eventList.appendChild(div);
+      });
+    }
+  }
+
+  renderCalendar(currentMonth, currentYear);
+
+  function prevMonth() {
+    currentMonth--;
+    if (currentMonth < 0) {
+      currentMonth = 11;
+      currentYear--;
+    }
+    renderCalendar(currentMonth, currentYear);
+  }
+
+  function nextMonth() {
+    currentMonth++;
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+    renderCalendar(currentMonth, currentYear);
+  }
+// Sidebar open/close logic with hover area
+const sidebar = document.getElementById('sidebar');
+const hoverArea = document.getElementById('sidebarHoverArea');
+let sidebarHovered = false;
+let hoverTimeout = null;
+
+function openSidebar() {
+    sidebar.classList.remove('closed');
+}
+function closeSidebar() {
+    sidebar.classList.add('closed');
+    // Close dropdown if open
+    const subjectsContainer = document.getElementById('subjectsContainer');
+    const dropdownArrow = document.getElementById('dropdownArrow');
+    subjectsContainer.classList.remove('expanded');
+    dropdownArrow.classList.remove('rotated');
+}
+
+sidebar.addEventListener('mouseenter', () => {
+    sidebarHovered = true;
+    openSidebar();
+    if (hoverTimeout) clearTimeout(hoverTimeout);
+});
+sidebar.addEventListener('mouseleave', () => {
+    sidebarHovered = false;
+    hoverTimeout = setTimeout(() => {
+        if (!sidebarHovered) closeSidebar();
+    }, 150);
+});
+hoverArea.addEventListener('mouseenter', () => {
+    sidebarHovered = true;
+    openSidebar();
+    if (hoverTimeout) clearTimeout(hoverTimeout);
+});
+hoverArea.addEventListener('mouseleave', () => {
+    sidebarHovered = false;
+    hoverTimeout = setTimeout(() => {
+        if (!sidebarHovered) closeSidebar();
+    }, 150);
+});
+
+// Teaching dropdown logic (only opens if sidebar is open)
+const teachingHeader = document.getElementById("teachingHeader");
+const subjectsContainer = document.getElementById("subjectsContainer");
+const dropdownArrow = document.getElementById("dropdownArrow");
+let teachingDropdownOpen = false;
+teachingHeader.addEventListener("click", function(e) {
+    if (sidebar.classList.contains('closed')) return;
+    subjectsContainer.classList.toggle("expanded");
+    dropdownArrow.classList.toggle("rotated");
+    teachingDropdownOpen = subjectsContainer.classList.contains("expanded");
+});
+
+// Dropdown for class card settings (unchanged)
+document.addEventListener("DOMContentLoaded", () => {
+    const dropdowns = document.querySelectorAll(".dropdown");
+    dropdowns.forEach(dropdown => {
+        const toggle = dropdown.querySelector(".toggle-options");
+        toggle.addEventListener("click", (e) => {
+            e.preventDefault();
+            dropdown.classList.toggle("active");
+        });
+        document.addEventListener("click", (e) => {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove("active");
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>

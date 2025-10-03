@@ -1,0 +1,68 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Banner - {{ class_obj.subject_name }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <style>
+.theme-option {
+    display: inline-block;
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 5px;
+    transition: 0.3s;
+}
+.theme-option:hover {
+    border: 2px solid #007bff;
+}
+.theme-preview {
+    width: 150px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+</style>
+</head>
+<body class="bg-light">
+
+<div class="card shadow-lg p-4">
+    <h4 class="mb-4">Update Banner for {{ class_obj.subject_name }}</h4>
+
+    <form method="POST" enctype="multipart/form-data" action="{% url 'update_banner' class_obj.pk %}">
+        {% csrf_token %}
+
+        <!-- Upload custom -->
+        <div class="mb-3">
+            <label class="form-label">Upload Custom Banner</label>
+            {{ form.banner }}
+        </div>
+
+        <hr>
+
+        <!-- Choose preset -->
+        <div class="mb-3">
+            <label class="form-label">Or select a theme</label>
+            <div class="d-flex gap-3 flex-wrap">
+                {% for value, label in form.fields.theme.choices %}
+                    {% if value %}
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="{{ value }}"
+                                   {% if class_obj.theme == value %}checked{% endif %}>
+                            <img src="{% static 'images/themes/' %}{{ value }}.jpg" alt="{{ label }}" class="theme-preview">
+                            <p class="text-center small">{{ label }}</p>
+                        </label>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Save Banner</button>
+            <a href="{% url 'subject' class_obj.pk %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

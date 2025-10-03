@@ -1,0 +1,771 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Bootstrap & Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <title>Assignment Detail</title>
+  <style>
+    body { background-color: #f9fafb; }
+    .assignment-card { border: none; border-radius: 12px; }
+    .work-card { border: none; border-radius: 12px; }
+    .comment-box { background: #f1f3f4; border-radius: 8px; padding: 10px; }
+    .profile-circle {
+      width: 32px; height: 32px;
+      border-radius: 50%; 
+      background-color:#007bff; 
+      color: white; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center;
+      font-weight: bold;
+    }
+    
+    /* Custom styles for the modern interface */
+    .sidebar-bg {
+      background-color: #f8f9fa;
+      min-height: 600px;
+    }
+    
+    .student-item {
+      transition: background-color 0.2s;
+    }
+    
+    .student-item:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .toggle-switch {
+      width: 48px;
+      height: 24px;
+      background-color: #007bff;
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      right: 2px;
+      bottom: 2px;
+      background-color: white;
+      border-radius: 10px;
+      transition: 0.3s;
+      width: 20px;
+      height: 20px;
+    }
+    
+    .toggle-switch input:checked + .toggle-slider {
+      transform: translateX(24px);
+    }
+    
+    .submission-preview {
+      width: 80px;
+      height: 60px;
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-4">
+
+  <!-- Back Button -->
+  <a class="btn btn-outline-secondary btn-sm mb-3" 
+     href="{% url 'teachers:subject' assignment.class_obj.id %}">
+    <i class="fa-solid fa-arrow-left me-1"></i> Back to Class
+  </a>
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+    <div>
+      <h3 class="fw-bold">{{ assignment.title }}</h3>
+      <small class="text-muted">
+        Posted by {{ assignment.class_obj.teacher.get_full_name }} · 
+        {{ assignment.created_at|date:"M d, Y" }}
+      </small>
+    </div>
+    <div class="text-end">
+      <span class="badge bg-primary fs-6">{{ assignment.points }} pts</span>
+      {% if assignment.due_date %}
+        <div class="text-danger small mt-1">
+          Due: {{ assignment.due_date|date:"M d, Y h:i A" }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs" id="assignmentTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="instructions-tab" data-bs-toggle="tab" 
+              data-bs-target="#instructions" type="button" role="tab">
+        Instructions
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="studentwork-tab" data-bs-toggle="tab" 
+              data-bs-target="#studentwork" type="button" role="tab">
+        Student Work
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content mt-3" id="assignmentTabsContent">
+    <!-- Instructions Tab -->
+    <div class="tab-pane fade show active" id="instructions" role="tabpanel">
+      <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+          <h5 class="fw-bold mb-3">Instructions</h5>
+          <p class="fs-6">{{ assignment.instructions|linebreaksbr|default:"No instructions provided." }}</p>
+        </div>
+      </div>
+
+      <!-- Class Comments -->
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">Class Comments</h6>
+          <form method="post" action="{}" class="mb-3">
+            {% csrf_token %}
+            <div class="input-group">
+              <input type="text" name="comment" class="form-control" placeholder="Add class comment...">
+              <button class="btn btn-primary" type="submit">Post</button>
+            </div>
+          </form>
+
+          {% for comment in assignment.class_comments.all %}
+            <div class="mb-3 p-2 border-bottom">
+              <div class="d-flex align-items-center mb-1">
+                <div class="profile-circle me-2">
+                  {{ comment.user.first_name|slice:":1" }}
+                </div>
+                <strong>{{ comment.user.get_full_name }}</strong>
+              </div>
+              <p class="mb-1">{{ comment.text }}</p>
+              <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+            </div>
+          {% empty %}
+            <p class="text-muted">No comments yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Work Tab - REVISED -->
+    <div class="tab-pane fade" id="studentwork" role="tabpanel">
+      {% if is_teacher %}
+        <!-- Teacher view with modern sidebar layout -->
+        <div class="row g-0 border rounded">
+          <!-- Left Sidebar -->
+          <div class="col-md-4 border-end sidebar-bg">
+            <div class="p-3">
+              <!-- Controls -->
+              <div class="d-flex gap-2 mb-3">
+               <button class="btn btn-outline-secondary btn-sm" id="returnAllBtn"
+        data-assignment-id="{{ assignment.id }}">
+  <i class="fa-solid fa-arrow-left"></i> Return All
+</button>
+
+                <button class="btn btn-outline-secondary btn-sm">
+                  <i class="fa-solid fa-envelope"></i>
+                </button>
+                <select class="form-select form-select-sm" style="max-width: 140px;">
+                  <option>{{ assignment.points }} points</option>
+                </select>
+              </div>
+
+              <!-- Students Section -->
+              <div class="mb-3">
+                <div class="d-flex align-items-center mb-2">
+                  <input type="checkbox" class="form-check-input me-2" id="selectAll">
+                  <i class="fa-solid fa-users me-2 text-muted"></i>
+                  <label for="selectAll" class="form-check-label fw-medium">All students</label>
+                </div>
+                
+                <select class="form-select form-select-sm mb-3" style="background-color: #e9ecef;">
+                  <option>Sort by status</option>
+                  <option>Sort by name</option>
+                  <option>Sort by grade</option>
+                </select>
+
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="turnedInFilter">
+                    <label class="form-check-label text-muted" for="turnedInFilter">
+                      Turned in
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Student List -->
+{% for sub in submissions %}
+<div class="d-flex align-items-center py-2 border-bottom student-item position-relative"
+     data-student-id="{{ sub.student.id }}"
+     style="cursor: pointer;">
+
+  <input type="checkbox" class="form-check-input me-3" name="student_select" value="{{ sub.student.id }}">
+  
+  <div class="profile-circle me-3">
+    {{ sub.student.first_name|slice:":1" }}
+  </div>
+
+  <div class="flex-grow-1">
+    <div class="fw-medium">{{ sub.student.get_full_name }}</div>
+  </div>
+
+  <div class="text-end d-flex align-items-center">
+    <div class="me-2">
+      <div class="fw-bold fs-5 {% if sub.grade %}text-success{% else %}text-muted{% endif %}">
+        {% if sub.grade %}{{ sub.grade }}/{{ assignment.points }}{% else %}—{% endif %}
+      </div>
+      <small class="text-muted">
+        {% if sub.turned_in %}Turned in{% else %}Draft{% endif %}
+      </small>
+    </div>
+
+    <!-- Three dots menu -->
+    <div class="dropdown">
+      <button class="btn btn-sm btn-link text-muted p-1" type="button" 
+              data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fa-solid fa-ellipsis-vertical"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+          <a class="dropdown-item" href="#"
+             data-student-id="{{ sub.student.id }}" 
+     data-assignment-id="{{ assignment.id }}">
+            <i class="fa-solid fa-reply me-2"></i>Return
+            <span class="text-muted small ms-2">Ctrl+Alt+R</span>
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="#" data-bs-toggle="modal" 
+             data-bs-target="#excuseModal{{ sub.id }}">
+            <i class="fa-solid fa-user-check me-2"></i>Excuse
+            <span class="text-muted small ms-2">Ctrl+Alt+E</span>
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="#" onclick="markAsMissing('{{ sub.id }}')">
+            <i class="fa-solid fa-exclamation-triangle me-2"></i>Mark as missing
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+                <!-- Return Modal -->
+                <div class="modal fade" id="returnModal{{ sub.id }}" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Return to {{ sub.student.get_full_name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                      </div>
+                      <div class="modal-body">
+                        <form method="post" action="{% url 'teachers:assignment_detail' assignment.id %}" id="returnForm{{ sub.id }}">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="return">
+                          <input type="hidden" name="submission_id" value="{{ sub.id }}">
+                          <div class="mb-3">
+                            <label for="grade{{ sub.id }}" class="form-label">Grade</label>
+                            <div class="input-group">
+                              <input type="number" class="form-control" id="grade{{ sub.id }}" 
+                                     name="grade" value="{{ sub.grade|default:'' }}" 
+                                     min="0" max="{{ assignment.points }}" required>
+                              <span class="input-group-text">/{{ assignment.points }}</span>
+                            </div>
+                          </div>
+                          <div class="mb-3">
+                            <label for="feedback{{ sub.id }}" class="form-label">Private comments (optional)</label>
+                            <textarea class="form-control" id="feedback{{ sub.id }}" name="feedback" 
+                                      rows="3" placeholder="Add feedback for the student..."></textarea>
+                          </div>
+                        </form>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" form="returnForm{{ sub.id }}" class="btn btn-primary">Return</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Excuse Modal -->
+                <div class="modal fade" id="excuseModal{{ sub.id }}" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Excuse {{ sub.student.get_full_name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                      </div>
+                      <div class="modal-body">
+                        <form method="post" action="{}" id="excuseForm{{ sub.id }}">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="excuse">
+                          <input type="hidden" name="submission_id" value="{{ sub.id }}">
+                          <div class="mb-3">
+                            <label for="excuseReason{{ sub.id }}" class="form-label">Reason (optional)</label>
+                            <textarea class="form-control" id="excuseReason{{ sub.id }}" name="excuse_reason" 
+                                      rows="3" placeholder="Reason for excusing this assignment..."></textarea>
+                          </div>
+                        </form>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" form="excuseForm{{ sub.id }}" class="btn btn-warning">Excuse</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+
+                {% for student in not_turned_in %}
+                <div class="d-flex align-items-center py-2 border-bottom student-item position-relative">
+                  <input type="checkbox" class="form-check-input me-3" name="student_select" value="{{ student.id }}">
+                  <div class="profile-circle me-3">
+                    {{ student.first_name|slice:":1" }}
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="fw-medium">{{ student.get_full_name }}</div>
+                  </div>
+                  <div class="text-end d-flex align-items-center">
+                    <div class="me-2">
+                      <div class="fw-bold fs-5 text-muted">—</div>
+                      <small class="text-muted">Not turned in</small>
+                    </div>
+                    <!-- Three dots menu -->
+                    <div class="dropdown">
+                      <button class="btn btn-sm btn-link text-muted p-1" type="button" 
+                              data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                          <a class="dropdown-item" href="#" data-bs-toggle="modal" 
+                             data-bs-target="#excuseModalNotTurnedIn{{ student.id }}">
+                            <i class="fa-solid fa-user-check me-2"></i>Excuse
+                            <span class="text-muted small ms-2">Ctrl+Alt+E</span>
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item" href="#" onclick="markAsMissing('{{ student.id }}')">
+                            <i class="fa-solid fa-exclamation-triangle me-2"></i>Mark as missing
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Excuse Modal for Not Turned In Students -->
+                <div class="modal fade" id="excuseModalNotTurnedIn{{ student.id }}" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Excuse {{ student.get_full_name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                      </div>
+                      <div class="modal-body">
+                        <form method="post" action="{}" id="excuseFormNotTurnedIn{{ student.id }}">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="excuse">
+                          <input type="hidden" name="student_id" value="{{ student.id }}">
+                          <div class="mb-3">
+                            <label for="excuseReasonNotTurnedIn{{ student.id }}" class="form-label">Reason (optional)</label>
+                            <textarea class="form-control" id="excuseReasonNotTurnedIn{{ student.id }}" name="excuse_reason" 
+                                      rows="3" placeholder="Reason for excusing this assignment..."></textarea>
+                          </div>
+                        </form>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" form="excuseFormNotTurnedIn{{ student.id }}" class="btn btn-warning">Excuse</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Content Area -->
+          <div class="col-md-8 bg-white">
+            <div class="p-4">
+              <!-- Assignment Stats -->
+              <div class="mb-4">
+                <h4 class="fw-bold mb-3">{{ assignment.title }}</h4>
+                
+                <div class="d-flex gap-5 mb-4">
+                  <div class="text-center">
+                    <div class="display-4 fw-light text-primary">{{ submissions|length }}</div>
+                    <div class="text-muted">Turned in</div>
+                  </div>
+                  <div class="text-center">
+                    <div class="display-4 fw-light">{{ not_turned_in|length }}</div>
+                    <div class="text-muted">Assigned</div>
+                  </div>
+                </div>
+
+                <!-- Accepting Submissions Toggle -->
+<div class="d-flex align-items-center mb-4">
+  <label class="toggle-switch me-3">
+    <input type="checkbox" id="acceptingSubmissions"
+           {% if is_past_due %}disabled{% endif %}
+           {% if assignment.accepting_submissions and not is_past_due %}checked{% endif %}>
+    <span class="toggle-slider"></span>
+  </label>
+  <span class="fw-medium me-2">Accepting submissions</span>
+  <i class="fa-solid fa-circle-info text-muted" title="Toggle submission acceptance"></i>
+</div>
+              </div>
+
+              <!-- Submission Controls -->
+              <div class="d-flex align-items-center gap-2 mb-3">
+                <select class="form-select" style="max-width: 120px;" id="submissionFilter">
+                  <option value="all">All</option>
+                  <option value="turned-in">Turned in</option>
+                  <option value="not-turned-in">Not turned in</option>
+                </select>
+                <button class="btn btn-outline-secondary">
+                  <i class="fa-solid fa-folder"></i>
+                </button>
+              </div>
+
+             <!-- Submissions List -->
+<div id="submissionsList">
+  {% for sub in submissions %}
+  <div class="card border mb-3 submission-card" data-status="turned-in">
+    <div class="card-body d-flex align-items-start">
+      
+      <!-- Profile -->
+      <div class="profile-circle me-3" style="width: 48px; height: 48px; font-size: 18px;">
+        {{ sub.student.first_name|slice:":1" }}
+      </div>
+
+      <!-- Student Info -->
+      <div class="flex-grow-1">
+        <div class="fw-bold mb-1">{{ sub.student.get_full_name }}</div>
+        {% if sub.file %}
+          <a href="{{ sub.file.url }}" target="_blank" class="small text-decoration-none text-primary">📎 {{ sub.file.name }}</a>
+        {% else %}
+          <div class="small text-muted">No file uploaded</div>
+        {% endif %}
+      </div>
+
+      <!-- Grade + Return -->
+      <form method="post" 
+            action="{% url 'teachers:assignment_detail' assignment.id %}" 
+            class="d-flex align-items-center grade-form">
+        {% csrf_token %}
+        <input type="hidden" name="submission_id" value="{{ sub.id }}">
+        <input type="hidden" name="action" value="return">
+        
+        <!-- Grade input -->
+        <input type="text" name="grade" 
+               value="{{ sub.grade|default:'' }}" 
+               min="0" max="{{ assignment.points }}"
+               class="form-control form-control-sm me-2 text-end"
+               style="width: 80px;"
+               placeholder="—"
+               onkeydown="if(event.key==='Enter'){this.form.submit();}">
+        <span class="me-3">/ {{ assignment.points }}</span>
+
+        <!-- Return button -->
+        <button type="submit" class="btn btn-sm btn-primary">Return</button>
+      </form>
+    </div>
+  </div>
+  {% empty %}
+  <div class="text-center text-muted py-5">
+    <i class="fa-solid fa-inbox fa-2x mb-3"></i>
+    <p>No submissions yet</p>
+  </div>
+  {% endfor %}
+</div>
+
+            </div>
+          </div>
+        </div>
+
+      {% else %}
+        <!-- Student view: own work (unchanged) -->
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="fw-bold mb-3">Your Work</h5>
+            {% if student_submission %}
+              <p>
+                <span class="fw-bold">Status:</span> 
+                {% if student_submission.turned_in %}
+                  <span class="badge bg-success">Turned in</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">Assigned</span>
+                {% endif %}
+              </p>
+              {% if student_submission.file %}
+                <p><a href="{{ student_submission.file.url }}" target="_blank" class="text-decoration-none">📎 View submitted file</a></p>
+              {% endif %}
+            {% else %}
+              <p class="text-muted">You haven't submitted anything yet.</p>
+            {% endif %}
+
+            <!-- Submit Form -->
+            <form method="post" enctype="multipart/form-data" action="{}">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label for="file" class="form-label fw-semibold">Upload your work</label>
+                <input class="form-control" type="file" name="file" id="file">
+              </div>
+              <button class="btn btn-success px-4" type="submit">
+                {% if student_submission and student_submission.turned_in %}
+                  Resubmit
+                {% else %}
+                  Turn In
+                {% endif %}
+              </button>
+            </form>
+
+            <!-- Private Comments -->
+            <hr>
+            <h6 class="fw-bold">Private Comments</h6>
+            <form method="post" action="{}" class="mb-3">
+              {% csrf_token %}
+              <div class="input-group">
+                <input type="text" name="comment" class="form-control" placeholder="Add private comment...">
+                <button class="btn btn-secondary" type="submit">Post</button>
+              </div>
+            </form>
+
+            {% for comment in student_submission.private_comments.all %}
+              <div class="mb-3 p-2 border-bottom">
+                <strong>{{ comment.user.get_full_name }}</strong>
+                <p class="mb-1">{{ comment.text }}</p>
+                <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+              </div>
+            {% empty %}
+              <p class="text-muted">No private comments yet.</p>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Select All functionality
+  const selectAllCheckbox = document.getElementById('selectAll');
+  const studentCheckboxes = document.querySelectorAll('input[name="student_select"]');
+  
+  if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', function() {
+      studentCheckboxes.forEach(checkbox => {
+        checkbox.checked = this.checked;
+      });
+    });
+  }
+
+  // Filter functionality
+  const turnedInFilter = document.getElementById('turnedInFilter');
+  const submissionFilter = document.getElementById('submissionFilter');
+  
+  function filterStudents() {
+    const studentItems = document.querySelectorAll('.student-item');
+    const showOnlyTurnedIn = turnedInFilter?.checked;
+    
+    studentItems.forEach(item => {
+      const statusText = item.querySelector('small')?.textContent.toLowerCase();
+      if (showOnlyTurnedIn) {
+        item.style.display = statusText?.includes('turned in') ? 'flex' : 'none';
+      } else {
+        item.style.display = 'flex';
+      }
+    });
+  }
+  
+  function filterSubmissions() {
+    const submissionCards = document.querySelectorAll('.submission-card');
+    const filterValue = submissionFilter?.value;
+    
+    submissionCards.forEach(card => {
+      const status = card.dataset.status;
+      if (filterValue === 'all' || filterValue === status) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  turnedInFilter?.addEventListener('change', filterStudents);
+  submissionFilter?.addEventListener('change', filterSubmissions);
+
+  // Grade form submission with feedback
+  document.querySelectorAll('.grade-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const gradeInput = this.querySelector('input[name="grade"]');
+      const button = this.querySelector('button');
+      
+      if (gradeInput.value && !isNaN(gradeInput.value)) {
+        // Here you would normally submit via AJAX to your Django view
+        console.log('Grade saved:', gradeInput.value);
+        
+        // Show success feedback
+        const originalText = button.textContent;
+        button.textContent = 'Saved!';
+        button.classList.remove('btn-success');
+        button.classList.add('btn-success');
+        
+        setTimeout(() => {
+          button.textContent = originalText;
+        }, 2000);
+        
+        // You can uncomment the line below to actually submit the form
+        // this.submit();
+      }
+    });
+  });
+
+  // Mark as missing function
+  window.markAsMissing = function(id) {
+    if (confirm('Are you sure you want to mark this as missing?')) {
+      console.log('Marking as missing:', id);
+      // Here you would send a request to your Django view to mark as missing
+      // You could create a form submission or AJAX request
+    }
+  };
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.altKey) {
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        // Focus on the currently selected student's return button
+        console.log('Return shortcut pressed');
+      }
+      if (e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+        // Focus on the currently selected student's excuse button
+        console.log('Excuse shortcut pressed');
+      }
+    }
+  });
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+  const studentItems = document.querySelectorAll(".student-item");
+  const detail = document.getElementById("student-detail"); // right panel container
+
+  studentItems.forEach(item => {
+    item.addEventListener("click", function(e) {
+      // prevent clicks on checkboxes & dropdowns from triggering row click
+      if (e.target.closest("input") || e.target.closest(".dropdown")) return;
+
+      const studentId = this.dataset.studentId;
+
+      fetch(`/students/submission/{{ assignment.id }}/${studentId}/`)
+        .then(response => response.text())
+        .then(html => {
+          detail.innerHTML = html;
+        });
+    });
+  });
+});
+
+
+
+document.addEventListener("DOMContentLoaded", function() {
+  const selectAll = document.getElementById("selectAll");
+  const returnAllBtn = document.getElementById("returnAllBtn");
+
+  // ✅ Toggle all checkboxes
+  if (selectAll) {
+    selectAll.addEventListener("change", function() {
+      document.querySelectorAll("input[name='student_select']").forEach(cb => {
+        cb.checked = selectAll.checked;
+      });
+    });
+  }
+
+  // ✅ Function to call API
+  function returnSubmissions(assignmentId, studentIds) {
+    if (!studentIds.length) {
+      alert("Please select at least one student.");
+      return;
+    }
+
+    fetch("{% url 'teachers:bulk_return_submissions' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: JSON.stringify({
+        assignment_id: assignmentId,
+        student_ids: studentIds
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        data.updated.forEach(sub => {
+          const item = document.querySelector(`.student-item[data-student-id="${sub.student_id}"]`);
+          if (item) {
+            const gradeEl = item.querySelector(".fs-5");
+            gradeEl.textContent = `${sub.grade}/{{ assignment.points }}`;
+            gradeEl.classList.remove("text-muted");
+            gradeEl.classList.add("text-success");
+          }
+        });
+        alert("Grades returned successfully!");
+      }
+    })
+    .catch(err => console.error(err));
+  }
+
+  // ✅ Return All button
+  if (returnAllBtn) {
+    returnAllBtn.addEventListener("click", function() {
+      const assignmentId = this.dataset.assignmentId;
+      const selected = Array.from(document.querySelectorAll("input[name='student_select']:checked"))
+                            .map(cb => cb.value);
+      returnSubmissions(assignmentId, selected);
+    });
+  }
+
+  // ✅ Single Return button
+  document.querySelectorAll(".return-btn").forEach(btn => {
+    btn.addEventListener("click", function(e) {
+      e.preventDefault();
+      const studentId = this.dataset.studentId;
+      const assignmentId = this.dataset.assignmentId;
+      returnSubmissions(assignmentId, [studentId]);
+    });
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,397 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📢 Student Announcements</title>
+<!-- ✅ Bootstrap CDN -->
+ <link rel="stylesheet" href="{% static 'teachers/dashboard.css' %}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- ✅ Custom CSS -->
+   <style>
+  /* Sidebar core */
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, #1e40af, #3b82f6);
+    color: #fff;
+    height: 100vh;
+    position: fixed;
+    left: 0; top: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.28s cubic-bezier(.4,2,.7,.9);
+    overflow: hidden;
+}
+.sidebar.closed {
+    width: 65px;
+}
+.sidebar .logo {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.1);
+    transition: padding .3s;
+}
+.sidebar.closed .logo { padding: 20px 12px; }
+.logo img {
+    width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; transition: margin 0.3s;
+}
+.sidebar.closed .logo img { margin-right: 0; }
+.cmu-logo {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    white-space: nowrap;
+    transition: opacity 0.18s, width 0.18s;
+}
+.sidebar.closed .cmu-logo {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+/* Nav styles */
+.nav-menu { flex: 1; padding: 16px 0;}
+.nav-item {
+    display: flex; align-items: center; padding: 16px 24px;
+    color: white; text-decoration: none;
+    transition: all 0.22s;
+    font-size: 0.97rem; font-weight: 500;
+    white-space: nowrap;
+}
+.nav-item i { margin-right: 15px; color: white; min-width: 21px;}
+.sidebar.closed .nav-item { justify-content: center; padding: 16px 0; }
+.sidebar.closed .nav-item i { margin-right: 0;}
+.sidebar.closed .nav-item .nav-label { display: none; }
+.nav-item .nav-label { display: inline; transition: opacity 0.2s;}
+/* Hide nav-label if sidebar closed */
+.sidebar.closed .nav-item .nav-label { display: none; }
+
+/* Dropdown and teaching */
+.dropdown-container { position: relative; }
+.sidebar.closed .dropdown-container .teaching-header { justify-content: center; }
+.sidebar.closed .dropdown-arrow,
+.sidebar.closed .class-count,
+.sidebar.closed .teaching-content span,
+.sidebar.closed .teaching-content .nav-label { display: none !important; }
+.sidebar.closed .subjects-container { display: none !important; }
+.teaching-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.teaching-header:hover { transform: translateY(-1px); }
+.teaching-header.active { background: rgba(255,255,255,0.1); border-radius: 8px; }
+.teaching-content { display: flex; align-items: center; color: white; }
+.teaching-content i {
+    width: 32px; height: 32px; border-radius: 50%; margin-right: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 16px; color: white;
+}
+.dropdown-arrow { color: white; font-size: 14px; transition: transform 0.3s ease; }
+.dropdown-arrow.rotated { transform: rotate(180deg); }
+.subjects-container {
+    overflow: hidden; transition: max-height 0.4s ease, opacity 0.3s ease; max-height: 0; opacity: 0; margin-top: 0;
+}
+.subjects-container.expanded { max-height: 500px; opacity: 1; margin-top: 12px; }
+.subject-item {
+    display: flex; align-items: center; background: transparent; margin-bottom: 8px; padding: 14px 16px; border-radius: 50px; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);
+}
+.subject-item:last-child { margin-bottom: 0; }
+.subject-item:hover { background: rgba(255,255,255,0.1); transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
+.subject-avatar { width: 24px; height: 24px; border-radius: 50%; background: #74b9ff; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: 600; font-size: 12px; color: white;}
+.subject-content { flex: 1;}
+.subject-name { color: white; font-weight: 600; font-size: 16px; margin: 0;}
+.subject-details { color: rgba(255,255,255,0.7); font-size: 12px; margin: 2px 0 0 0;}
+.class-count { background: rgba(255,255,255,0.2); color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+.delete-subject-btn { background: rgba(220,38,38,0.8); color: white; border: none; width: 20px; height: 20px; border-radius: 50%; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; margin-left: 8px;}
+.delete-subject-btn:hover { background: rgba(220,38,38,1); transform: scale(1.1); }
+/* Container transition */
+.subjects-container {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, padding 0.3s ease-in-out;
+    padding: 0 10px;
+}
+
+.subjects-container.expanded {
+    max-height: 500px; /* enough to fit multiple classes */
+    padding: 10px;
+}
+
+/* Arrow rotation */
+.dropdown-arrow {
+    transition: transform 0.3s ease;
+}
+
+.dropdown-arrow.rotate {
+    transform: rotate(180deg);
+}
+
+/* Each class item */
+.subject-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    transition: background 0.2s;
+}
+
+.subject-item:hover {
+    background: #f2f2f268;
+}
+
+.delete-form {
+    margin-left: 10px;
+}
+
+.delete-btn {
+    background: transparent;
+    border: none;
+    color: #dc3545; /* red */
+    font-size: 18px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.delete-btn:hover {
+    color: #a71d2a; /* darker red on hover */
+}
+.dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        bottom: 100%;  /* makes it appear above footer */
+        right: 0;
+        background: #fff;
+        min-width: 150px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        border-radius: 6px;
+        z-index: 10;
+    }
+
+    .dropdown-menu a {
+        display: block;
+        padding: 8px 12px;
+        text-decoration: none;
+        color: #333;
+        font-size: 14px;
+    }
+
+    .dropdown-menu a:hover {
+        background: #f5f5f5;
+    }
+
+    .dropdown.active .dropdown-menu {
+        display: block;
+    }
+
+/* Sidebar hover trigger area */
+.sidebar-hover-area {
+    position: fixed;
+    left: 0; top: 0;
+    width: 22px; height: 100vh;
+    z-index: 1050;
+    background: transparent;
+}
+
+/* Main content */
+.main-content {
+    margin-left: 280px;
+    transition: margin-left 0.28s cubic-bezier(.4,2,.7,.9);
+}
+.sidebar.closed ~ .main-content {
+    margin-left: 65px;
+}
+
+  </style>
+</head>
+<body class="bg-light">
+ <!-- Sidebar Hover Area for mouse entry -->
+<div class="sidebar-hover-area" id="sidebarHoverArea"></div>
+<!-- Sidebar -->
+<div class="sidebar closed" id="sidebar">
+    <div class="logo">
+        <img src="{% static 'images/cmu.jpg' %}" alt="CMU Logo">
+        <div class="cmu-logo">City of Malabon University</div>
+    </div>
+    <nav class="nav-menu">
+        <a href="{% url 'students:dashboard' %}" class="nav-item"><i class="fas fa-home"></i><span class="nav-label">Home</span></a>
+        <a href="{% url 'students:calendar' %}" class="nav-item"><i class="fas fa-calendar"></i><span class="nav-label">Event Calendar</span></a>
+       <div class="dropdown-container">
+            <div class="teaching-header" id="teachingHeader">
+                <div class="teaching-content">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span class="nav-label">My Classes</span>
+                    <span class="class-count" id="classCount">{{ enrolled_classes|length }} classes</span>
+                </div>
+                <i class="fas fa-chevron-down dropdown-arrow" id="dropdownArrow"></i>
+            </div>
+            <div class="subjects-container" id="subjectsContainer">
+               {% if enrolled_classes %}
+    {% for class in enrolled_classes %}
+      <div class="subject-item" onclick="location.href='{% url 'students:class_detail' class.id %}'">
+        <div class="subject-avatar">{{ class.class_name|first|upper }}</div>
+        <div class="subject-info">
+          <div class="subject-name">{{ class.class_name }}</div>
+          <div class="subject-details">{{ class.section|default:"No section" }}</div>
+        </div>
+                     
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-state" id="emptyState">
+                No enrolled classes created yet.
+            </div>
+            {% endif %}
+        </div>
+        </div>
+        <a href="{% url 'students:student_announcements' %}" class="nav-item"><i class="fas fa-bullhorn"></i><span class="nav-label">Announcement</span></a>
+        <a href="{% url 'students:messages_inbox' %}" class="nav-item"><i class="fas fa-comments"></i><span class="nav-label">Messages</span></a>
+        <a href="{% url 'students:archived_classes' %}" class="nav-item"><i class="fas fa-archive"></i><span class="nav-label">Archived Classes</span></a>
+        <a href="#" class="nav-item"><i class="fas fa-cog"></i><span class="nav-label">Settings</span></a>
+        <a href="{% url 'account_logout' %}" class="nav-item"><i class="fas fa-sign-out-alt"></i><span class="nav-label">Logout</span></a>
+    </nav>
+</div>
+ <!-- Main Content Area -->
+<div class="main-content">
+    <!-- ...[Your main content unchanged]... -->
+    <!-- Header -->
+    <header class="header">
+        
+        <div class="search-bar"></div>
+        <div class="header-right">
+            <i class="fas fa-bell notification-icon"></i>
+            <div class="user-profile">
+                <span>{{ user.first_name }}</span>
+                <div class="user-avatar">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="User Avatar">
+                    {% else %}
+                        <img src="{% static 'images/user.jpg' %}" alt="User Avatar">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+<div class="container mt-4">
+  <h2 class="fw-bold mb-4">📢 Announcements</h2>
+
+  <div class="row">
+    <div class="col-md-12">
+      {% for announcement in announcements %}
+      <div class="card announcement-card shadow-sm mb-3">
+        <div class="card-body">
+          <h5 class="card-title d-flex align-items-center">
+            {{ announcement.title }}
+            <span class="badge bg-info ms-2">{{ announcement.category|title }}</span>
+            {% if announcement.priority == "high" %}
+            <span class="badge bg-danger ms-2">Urgent</span>
+            {% endif %}
+          </h5>
+          <p class="text-muted small mb-2">
+            Posted by {{ announcement.author.get_full_name|default:announcement.author.username }}
+            • {{ announcement.date_posted|date:"M d, Y H:i" }}
+          </p>
+          <p class="card-text">{{ announcement.content|truncatewords:25 }}</p>
+          <a href="{% url 'teachers:announcement_detail' announcement.id %}" class="btn btn-sm btn-outline-primary">
+            Read More
+          </a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="alert alert-info">No announcements available.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+</div>
+<script>
+    // Sidebar open/close logic with hover area
+const sidebar = document.getElementById('sidebar');
+const hoverArea = document.getElementById('sidebarHoverArea');
+let sidebarHovered = false;
+let hoverTimeout = null;
+
+function openSidebar() {
+    sidebar.classList.remove('closed');
+}
+function closeSidebar() {
+    sidebar.classList.add('closed');
+    // Close dropdown if open
+    const subjectsContainer = document.getElementById('subjectsContainer');
+    const dropdownArrow = document.getElementById('dropdownArrow');
+    subjectsContainer.classList.remove('expanded');
+    dropdownArrow.classList.remove('rotated');
+}
+
+sidebar.addEventListener('mouseenter', () => {
+    sidebarHovered = true;
+    openSidebar();
+    if (hoverTimeout) clearTimeout(hoverTimeout);
+});
+sidebar.addEventListener('mouseleave', () => {
+    sidebarHovered = false;
+    hoverTimeout = setTimeout(() => {
+        if (!sidebarHovered) closeSidebar();
+    }, 150);
+});
+hoverArea.addEventListener('mouseenter', () => {
+    sidebarHovered = true;
+    openSidebar();
+    if (hoverTimeout) clearTimeout(hoverTimeout);
+});
+hoverArea.addEventListener('mouseleave', () => {
+    sidebarHovered = false;
+    hoverTimeout = setTimeout(() => {
+        if (!sidebarHovered) closeSidebar();
+    }, 150);
+});
+
+// Teaching dropdown logic (only opens if sidebar is open)
+const teachingHeader = document.getElementById("teachingHeader");
+const subjectsContainer = document.getElementById("subjectsContainer");
+const dropdownArrow = document.getElementById("dropdownArrow");
+let teachingDropdownOpen = false;
+teachingHeader.addEventListener("click", function(e) {
+    if (sidebar.classList.contains('closed')) return;
+    subjectsContainer.classList.toggle("expanded");
+    dropdownArrow.classList.toggle("rotated");
+    teachingDropdownOpen = subjectsContainer.classList.contains("expanded");
+});
+
+// Dropdown for class card settings (unchanged)
+document.addEventListener("DOMContentLoaded", () => {
+    const dropdowns = document.querySelectorAll(".dropdown");
+    dropdowns.forEach(dropdown => {
+        const toggle = dropdown.querySelector(".toggle-options");
+        toggle.addEventListener("click", (e) => {
+            e.preventDefault();
+            dropdown.classList.toggle("active");
+        });
+        document.addEventListener("click", (e) => {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove("active");
+            }
+        });
+    });
+});
+
+</script>
+</script>
+</body>
+</html>

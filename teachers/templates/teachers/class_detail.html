@@ -1,0 +1,104 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ class.class_name }} - Details</title>
+    <link rel="stylesheet" href="{% static 'teachers/dashboard.css' %}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</head>
+<body>
+    <div class="main-content">
+        <!-- Tabs -->
+<div class="tabs">
+    <button class="tab active" onclick="showTab('stream')">Stream</button>
+    <button class="tab" onclick="showTab('classwork')">Classwork</button>
+    <button class="tab" onclick="showTab('people')">People</button>
+    <button class="tab" onclick="showTab('marks')">Marks</button>
+</div>
+
+<!-- Tab Content -->
+<div id="stream" class="tab-content active">
+    <!-- Stream content here -->
+</div>
+
+<div id="classwork" class="tab-content" style="display:none;">
+    <!-- Classwork content here -->
+</div>
+
+<div id="people" class="tab-content" style="display:none;">
+    <div class="info-card">
+        <h3>Enrolled Students</h3>
+        {% if students %}
+            <ul class="student-list">
+                {% for student in students %}
+                    <li>
+                        <strong>{{ student.first_name }} {{ student.last_name }}</strong><br>
+                        <small>{{ student.email }}</small>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No students enrolled yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div id="marks" class="tab-content" style="display:none;">
+    <!-- Marks content here -->
+</div>
+
+        <!-- Banner -->
+        <div class="banner">
+            <p>Banner Image Placeholder</p>
+        </div>
+
+        <!-- Class Info -->
+        <div class="class-info-card">
+            <h2>{{ class.class_name }}</h2>
+            <p>Section {{ class.section }}</p>
+        </div>
+
+        <!-- Class Code -->
+        <div class="class-code-card">
+            <label>Class Code</label>
+            <div class="code-box">
+                <input type="text" value="{{ class.class_code }}" id="classCode" readonly>
+                <button onclick="copyCode()" title="Copy"><i class="fas fa-copy"></i></button>
+            </div>
+        </div>
+
+        <!-- Announcement Card -->
+        <div class="announcement-card">
+            <p>Announce something to your class</p>
+        </div>
+
+        <!-- Info Card -->
+        <div class="info-card">
+            <p>This is where you can talk to your class</p>
+            <small>Use the stream to share announcements, post assignments, and respond to student questions.</small>
+        </div>
+    </div>
+
+    <script>
+    function copyCode() {
+        const codeInput = document.getElementById("classCode");
+        codeInput.select();
+        codeInput.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        alert("Class code copied: " + codeInput.value);
+    }
+    function showTab(tabId) {
+    const tabs = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => tab.style.display = 'none');
+
+    document.getElementById(tabId).style.display = 'block';
+
+    const tabButtons = document.querySelectorAll('.tab');
+    tabButtons.forEach(btn => btn.classList.remove('active'));
+
+    event.target.classList.add('active');
+}
+    </script>
+</body>
+</html>

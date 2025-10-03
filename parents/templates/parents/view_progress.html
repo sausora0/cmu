@@ -1,0 +1,19 @@
+<h2>{{ student.get_full_name }}'s Progress</h2>
+
+<h3>Quizzes</h3>
+<ul>
+    {% for quiz in quizzes %}
+        <li>{{ quiz.quiz.title }} — Score: {{ quiz.score }}</li>
+    {% empty %}
+        <li>No quiz results yet.</li>
+    {% endfor %}
+</ul>
+
+<h3>Assignments</h3>
+<ul>
+    {% for assignment in assignments %}
+        <li>{{ assignment.title }} — Status: {{ assignment.status }}</li>
+    {% empty %}
+        <li>No assignments yet.</li>
+    {% endfor %}
+</ul>
