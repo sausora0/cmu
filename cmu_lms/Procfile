@@ -1,0 +1,1 @@
+web: gunicorn cmu_lms.wsgi:application
