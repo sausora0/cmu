@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'main/contact.css' %}">
+    <title>Contact Us</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+   <header>
+  <div class="logo-container">
+    <a href="{% url 'home' %}" class="logo-link">
+      <img src="{% static 'images/logo.png' %}" alt="CMU Logo" class="logo-img">
+      <span class="logo-text">CMU LMS</span>
+    </a>
+  </div>
+</header>
+    <!-- Contact section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <h2 class="section-title">Contact Us</h2>
+            <div class="contact-methods">
+                <div class="contact-card">
+                    <div class="contact-icon"><i class="fas fa-phone"></i></div>
+                    <h3>Phone</h3>
+                    <p>(123) 456-7890</p>
+                    <p>Mon-Fri: 9am-5pm</p>
+                </div>
+                <div class="contact-card">
+                    <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+                    <h3>Email</h3>
+                    <p>cityofmalabonuniversity@gmail.com</p>
+                    <p>We respond within 24 hours</p>
+                </div>
+                <div class="contact-card">
+                    <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <h3>Location</h3>
+                    <p>Longos Malabon</p>
+                    <p>City, State 1470</p>
+                </div>
+            </div>
+            
+            <form class="contact-form" id="contactForm">
+                <div class="form-success" id="successMessage">
+                    <i class="fas fa-check-circle"></i> Thank you! Your message has been sent successfully.
+                </div>
+                <div class="form-error" id="errorMessage">
+                    <i class="fas fa-exclamation-triangle"></i> Please fill in all required fields.
+                </div>
+                
+                <div class="form-group">
+                    <label for="name">Your Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact-email">Email Address</label>
+                    <input type="email" id="contact-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" required placeholder="Tell us how we can help you..."></textarea>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn">
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('contact-email').value;
+            const message = document.getElementById('message').value;
+            
+            const successMsg = document.getElementById('successMessage');
+            const errorMsg = document.getElementById('errorMessage');
+            
+            if (name && email && message) {
+                // Hide error message
+                errorMsg.style.display = 'none';
+                
+                // Show success message
+                successMsg.style.display = 'block';
+                
+                // Clear form
+                document.getElementById('contactForm').reset();
+                
+                // Hide success message after 5 seconds
+                setTimeout(() => {
+                    successMsg.style.display = 'none';
+                }, 5000);
+            } else {
+                // Hide success message
+                successMsg.style.display = 'none';
+                
+                // Show error message
+                errorMsg.style.display = 'block';
+                
+                // Hide error message after 3 seconds
+                setTimeout(() => {
+                    errorMsg.style.display = 'none';
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ quiz.title|default:"Quiz" }}</title>
+  <style>
+    /* your existing CSS (kept as-is) */
+    body { background: linear-gradient(120deg, #e3f0ff 0%, #f2f6ff 100%); min-height: 100vh; margin: 0; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; }
+    .quiz-container { max-width: 700px; margin: 2.5rem auto; background: #fff; border-radius: 22px; box-shadow: 0 8px 24px rgba(33,61,138,0.13), 0 2px 4px rgba(30,136,229,0.06); padding: 2.5rem 2rem 2rem 2rem; position: relative; overflow: hidden; animation: fadeInQuiz .5s; }
+    @keyframes fadeInQuiz { from { opacity: 0; transform: translateY(40px);} to { opacity: 1; transform: none;} }
+    .quiz-container::before { content: ''; position: absolute; top: -80px; right: -80px; width: 180px; height: 180px; background: radial-gradient(circle at 70% 30%, #3f51b5 0%, #1e88e5 70%, transparent 100%); opacity: 0.08; z-index: 0; border-radius: 50%; }
+    .back-btn { display: inline-block; margin-bottom: 1.5em; background: #fff; color: #3949ab; border: 2px solid #c5cae9; border-radius: 8px; padding: .45em 1.15em; font-size: 1.05rem; font-weight: 600; text-decoration: none; transition: background .15s, color .15s, box-shadow .13s; box-shadow: 0 2px 10px rgba(30,136,229,0.06); cursor: pointer; }
+    .back-btn:hover, .back-btn:focus { background: #e3eafd; color: #263373; box-shadow: 0 2px 20px rgba(30,136,229,0.10); }
+    .quiz-title { font-size: 2.4rem; font-weight: 700; color: #263373; letter-spacing: .5px; margin-bottom: .25em; text-align: center; position: relative; z-index: 1; }
+    .quiz-type { font-size: 1.05rem; color: #4d5c88; text-align: center; margin-bottom: 1.1em; letter-spacing: 0.5px; position: relative; z-index: 1; }
+    .quiz-description { font-size: 1.17rem; color: #49536b; background: #e3eafd; border-radius: 10px; text-align: center; margin-bottom: 2.3em; padding: .8em 1em; position: relative; z-index: 1; }
+    @media (max-width: 576px) { .quiz-container { padding: 1.1rem .2rem 1.2rem .2rem; border-radius: 14px; } .quiz-title { font-size: 1.15rem; } }
+    .quiz-question-card { border: 2px solid #e8eaf6; border-radius: 14px; background: linear-gradient(90deg, #f8fafc 70%, #e8f0fe 100%); margin-bottom: 1.7em; padding: 1.5em 1.1em 1.1em 1.1em; transition: box-shadow .18s, border-color .18s; position: relative; z-index: 1; }
+    .quiz-question-card:hover, .quiz-question-card:focus-within { box-shadow: 0 5px 20px rgba(26,35,126,0.09); border-color: #7986cb; }
+    .quiz-question-number { color: #3366cc; font-weight: 600; font-size: 1.07rem; margin-bottom: 0.3em; display: flex; align-items: center; }
+    .quiz-question-number::before { content: "🔹"; margin-right: 7px; font-size: 1.1em; }
+    .quiz-question-text { font-size: 1.18rem; color: #232f44; margin-bottom: 1.1em; font-weight: 500; line-height: 1.4; }
+    .form-check { padding-left: 1.9em; margin-bottom: 0.85em; position: relative; }
+    .form-check-input[type="radio"] { position: absolute; left: 0.3em; top: .45em; accent-color: #3949ab; box-shadow: 0 2px 6px rgba(30,136,229,0.15); width: 1.1em; height: 1.1em; transition: box-shadow .18s; }
+    .form-check-input:focus { border-color: #5c6bc0; box-shadow: 0 0 0 0.18rem #5c6bc033; }
+    .form-check-label { cursor: pointer; font-size: 1.09rem; color: #334b77; padding-left: 0.1em; font-weight: 400; transition: color .16s; }
+    .form-check-input:checked + .form-check-label { color: #3949ab; font-weight: 600; }
+    .form-control { border-radius: 8px; border: 1.5px solid #c5cae9; box-shadow: none; font-size: 1.06rem; padding: 0.7em 0.9em; background: #f9fbfc; color: #263238; margin-bottom: .7em; transition: border-color .17s; }
+    .form-control:focus { border-color: #5c6bc0; background: #e8f0fe; outline: none; }
+    .quiz-submit-btn { width: 100%; background: linear-gradient(90deg, #3949ab 65%, #1e88e5 100%); border: none; color: #fff; font-weight: 700; padding: 1em; font-size: 1.19rem; border-radius: 9px; margin-top: 1.5em; box-shadow: 0 2px 10px rgba(30,136,229,0.13); transition: background .15s, transform .13s; letter-spacing: 0.5px; position: relative; z-index: 2; }
+    .quiz-submit-btn:hover, .quiz-submit-btn:focus { background: linear-gradient(90deg, #1e88e5 40%, #3949ab 100%); color: #fff; transform: translateY(-2px) scale(1.01); box-shadow: 0 5px 20px rgba(30,136,229,0.20); }
+    .quiz-progress-bar { width: 100%; height: 8px; background: #e3eafd; border-radius: 5px; overflow: hidden; margin-bottom: 2em; margin-top: .4em; }
+    .quiz-progress-bar-inner { height: 100%; background: linear-gradient(90deg, #3949ab 65%, #1e88e5 100%); border-radius: 5px; width: 0%; transition: width .3s; }
+  </style>
+</head>
+<body>
+<div class="quiz-container mt-4 mb-4">
+
+  <!-- Back button -->
+  <a class="back-btn" href="{% url 'students:class_detail' id=quiz.class_obj.id %}">← Back</a>
+
+  <h2 class="quiz-title">{{ quiz.title }}</h2>
+  <div class="quiz-type">({{ quiz.get_quiz_type_display }})</div>
+  <div class="quiz-description">{{ quiz.description|default:"No description" }}</div>
+
+  <!-- Optional Progress Bar -->
+  <div class="quiz-progress-bar">
+    <div class="quiz-progress-bar-inner" style="width:0%"></div>
+  </div>
+
+  {% if submitted %}
+    <div style="margin-bottom:1rem;">
+      <span class="badge bg-success">Turned In</span>
+    </div>
+  {% endif %}
+
+  <form method="post" autocomplete="off" style="position:relative;z-index:2;">
+    {% csrf_token %}
+
+    {% for pair in qa_pairs %}
+      {% with question=pair.question answer=pair.answer %}
+        <div class="quiz-question-card">
+          <div class="quiz-question-number">
+            <span>Q{{ forloop.counter }}:</span>
+          </div>
+
+          <div class="quiz-question-text">
+            {{ question.text }}
+          </div>
+
+          {% if submitted %}
+            <!-- READ-ONLY HISTORY -->
+            {% if question.question_type == "multiple-choice" %}
+              <p><strong>Your answer:</strong>
+                {% if answer and answer.selected_option %}
+                  {{ answer.selected_option.text }}
+                {% else %}
+                  <em>No answer</em>
+                {% endif %}
+              </p>
+
+            {% elif question.question_type == "identification" or question.question_type == "essay" %}
+              <p><strong>Your answer:</strong>
+                {% if answer and answer.text_answer %}
+                  {{ answer.text_answer }}
+                {% else %}
+                  <em>No answer</em>
+                {% endif %}
+              </p>
+            {% endif %}
+
+
+          {% else %}
+            <!-- INPUTS FOR TAKING QUIZ -->
+            {% if question.question_type == "multiple-choice" %}
+              {% for option in question.options.all %}
+                <div class="form-check">
+                  <input type="radio" class="form-check-input"
+                         name="question_{{ question.id }}"
+                         value="{{ option.id }}" id="opt{{ option.id }}">
+                  <label class="form-check-label" for="opt{{ option.id }}">
+                    {{ option.text }}
+                  </label>
+                </div>
+              {% endfor %}
+
+            {% elif question.question_type == "identification" %}
+              <input type="text" class="form-control" name="question_{{ question.id }}" placeholder="Type your answer">
+
+            {% elif question.question_type == "essay" %}
+              <textarea class="form-control" name="question_{{ question.id }}" rows="4" placeholder="Write your essay here"></textarea>
+            {% endif %}
+          {% endif %}
+        </div>
+      {% endwith %}
+    {% endfor %}
+
+    {% if not submitted %}
+      <button type="submit" class="quiz-submit-btn">Submit Quiz</button>
+    {% else %}
+      <a href="{% url 'students:class_detail' id=quiz.class_obj.id %}" class="quiz-submit-btn" style="display:inline-block; text-align:center; text-decoration:none;">Back to Classwork</a>
+    {% endif %}
+  </form>
+</div>
+</body>
+</html>

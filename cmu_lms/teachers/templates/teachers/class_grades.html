@@ -1,0 +1,117 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Grades - {{ class_obj.class_name }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .chip-graded { background:#d1fae5; color:#065f46; padding:6px 8px; border-radius:12px; }
+    .chip-turned { background:#dbeafe; color:#1e3a8a; padding:6px 8px; border-radius:12px; }
+    .chip-missing { background:#fee2e2; color:#991b1b; padding:6px 8px; border-radius:12px; }
+    .table-fixed { table-layout: fixed; width: 100%; }
+    .col-assignment { width: 150px; }
+  </style>
+</head>
+<body>
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Grades — {{ class_obj.class_name }}</h4>
+    <div>
+      <a href="{% url 'teachers:export_grades' class_obj.id %}" class="btn btn-outline-secondary btn-sm">Download CSV</a>
+      <button class="btn btn-danger btn-sm" form="gradeform" name="bulk_zero" value="1">Set all missing = 0</button>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <form method="post" enctype="multipart/form-data" action="{% url 'teachers:import_grades' class_obj.id %}" class="d-inline-block">
+      {% csrf_token %}
+      <input type="file" name="file" accept=".csv" required class="form-control form-control-sm d-inline-block" style="width:280px;">
+      <button type="submit" class="btn btn-primary btn-sm">Upload CSV</button>
+    </form>
+  </div>
+
+  <form method="post" id="gradeform">
+    {% csrf_token %}
+    <table class="table table-hover table-fixed">
+      <thead class="table-light">
+        <tr>
+          <th style="min-width:200px">Student</th>
+          {% for assignment in assignments %}
+            <th class="col-assignment text-center">
+              <div>{{ assignment.title }}</div>
+              <small class="text-muted d-block">out of {{ assignment.points }}</small>
+              {% if assignment_averages|default:{} %}
+                <div class="text-success small mt-1">
+                  Avg: {{ assignment_averages|get_item:assignment.id|default_if_none:"—" }}
+                </div>
+              {% endif %}
+            </th>
+          {% endfor %}
+          <th class="text-center">Average</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in gradebook %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center">
+                {% if row.student.profile_picture %}
+                  <img src="{{ row.student.profile_picture.url }}" class="rounded-circle me-2" width="36" height="36">
+                {% else %}
+                  <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2" style="width:36px;height:36px;">
+                    {{ row.student.first_name|slice:":1" }}
+                  </div>
+                {% endif %}
+                <div>
+                  <div>{{ row.student.get_full_name }}</div>
+                  <div class="text-muted small">{{ row.student.email }}</div>
+                </div>
+              </div>
+            </td>
+
+            {% for g in row.grades %}
+              {% with sub=g.submission %}
+              <td class="text-center">
+                <!-- STATUS CHIP -->
+                {% if g.grade is not None %}
+                  <div class="chip-graded mb-1">Graded</div>
+                {% elif sub.file %}
+                  <div class="chip-turned mb-1">Turned In</div>
+                {% else %}
+                  <div class="chip-missing mb-1">Missing</div>
+                {% endif %}
+
+                <!-- Grade input -->
+                <input type="text" name="grade_{{ sub.id }}" value="{{ g.grade|default:'' }}" class="form-control form-control-sm mb-1">
+
+                <!-- Publish checkbox -->
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="publish_{{ sub.id }}" name="publish_{{ sub.id }}" {% if sub.is_published %}checked{% endif %}>
+                  <label class="form-check-label small" for="publish_{{ sub.id }}">Published</label>
+                </div>
+              </td>
+              {% endwith %}
+            {% endfor %}
+
+            <td class="text-center">
+              {% if row.average %}
+                <strong>{{ row.average }}</strong>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="d-flex justify-content-end mt-3">
+      <button type="submit" class="btn btn-success">Save changes</button>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <title>Settings</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <!-- Back Button -->
+                <div class="mb-3">
+                    <a href="{% url 'teachers:dashboard' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+
+                <h2 class="mb-4 text-center">User Settings</h2>
+                <form method="POST" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Profile Section -->
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Profile</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-2">
+                                {{ form.show_email }}
+                                <label class="form-check-label">{{ form.show_email.label }}</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                {{ form.show_phone }}
+                                <label class="form-check-label">{{ form.show_phone.label }}</label>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">{{ form.profile_visibility.label }}</label>
+                                <select name="{{ form.profile_visibility.name }}" class="form-select">
+                                    {% for val, text in form.profile_visibility.field.choices %}
+                                        <option value="{{ val }}" {% if form.profile_visibility.value == val %}selected{% endif %}>{{ text }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications Section -->
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Notifications</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-2">
+                                {{ form.notify_assignments }}
+                                <label class="form-check-label">{{ form.notify_assignments.label }}</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                {{ form.notify_messages }}
+                                <label class="form-check-label">{{ form.notify_messages.label }}</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                {{ form.notify_grades }}
+                                <label class="form-check-label">{{ form.notify_grades.label }}</label>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">{{ form.notification_frequency.label }}</label>
+                                <select name="{{ form.notification_frequency.name }}" class="form-select">
+                                    {% for val, text in form.notification_frequency.field.choices %}
+                                        <option value="{{ val }}" {% if form.notification_frequency.value == val %}selected{% endif %}>{{ text }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preferences Section -->
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Preferences</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="form-label">{{ form.theme.label }}</label>
+                                <select name="{{ form.theme.name }}" class="form-select">
+                                    {% for val, text in form.theme.field.choices %}
+                                        <option value="{{ val }}" {% if form.theme.value == val %}selected{% endif %}>{{ text }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">{{ form.language.label }}</label>
+                                <input type="text" name="{{ form.language.name }}" value="{{ form.language.value }}" class="form-control">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">{{ form.timezone.label }}</label>
+                                <input type="text" name="{{ form.timezone.name }}" value="{{ form.timezone.value }}" class="form-control">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">{{ form.font_size.label }}</label>
+                                <select name="{{ form.font_size.name }}" class="form-select">
+                                    {% for val, text in form.font_size.field.choices %}
+                                        <option value="{{ val }}" {% if form.font_size.value == val %}selected{% endif %}>{{ text }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-check">
+                                {{ form.high_contrast }}
+                                <label class="form-check-label">{{ form.high_contrast.label }}</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Communication Section -->
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">Communication</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-2">
+                                {{ form.allow_messages_from_students }}
+                                <label class="form-check-label">{{ form.allow_messages_from_students.label }}</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                {{ form.allow_messages_from_parents }}
+                                <label class="form-check-label">{{ form.allow_messages_from_parents.label }}</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                {{ form.allow_group_chat }}
+                                <label class="form-check-label">{{ form.allow_group_chat.label }}</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teacher Section -->
+                    {% if request.user.is_teacher %}
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">Teacher Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="form-label">{{ form.default_grading_scheme.label }}</label>
+                                <select name="{{ form.default_grading_scheme.name }}" class="form-select">
+                                    {% for val, text in form.default_grading_scheme.field.choices %}
+                                        <option value="{{ val }}" {% if form.default_grading_scheme.value == val %}selected{% endif %}>{{ text }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-check mb-2">
+                                {{ form.allow_late_submission }}
+                                <label class="form-check-label">{{ form.allow_late_submission.label }}</label>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">{{ form.max_file_size_mb.label }}</label>
+                                <input type="number" name="{{ form.max_file_size_mb.name }}" value="{{ form.max_file_size_mb.value }}" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Save Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Save Settings</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

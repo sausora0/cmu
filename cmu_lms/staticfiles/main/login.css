@@ -1,0 +1,263 @@
+
+        body {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            background: white;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 16px 32px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-img {
+  height: 40px; /* Adjust as needed */
+}
+
+.logo-text {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #004080; /* Customize to match your theme */
+}
+        .container {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: url("../images/background.jpg")center/cover no-repeat;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            padding: 0;
+        }
+        
+        
+        .login-box {
+    display: flex;
+    background: rgba(255,255,255,0.97);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    overflow: hidden;
+    max-width: 900px;
+    width: 100%;   /* ✅ instead of 150% */
+    height: auto;  /* ✅ allow content to grow naturally */
+}
+
+.login-left {
+    background: linear-gradient(135deg, #7EA6FF 8%, #7EA6FF 46%, #6B8EDA 81%, #4B6499 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;      /* ✅ flexible instead of fixed vh */
+    min-width: 250px; /* ✅ keep it reasonable */
+    padding: 40px 24px;
+}
+        .login-left img {
+            width: 180px;
+            height: auto;
+            margin-bottom: 25px;
+            display: block;
+        }
+        .login-left img:last-child {
+            margin-bottom: 0;
+        }
+        .login-left h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .login-right {
+    flex: 2;
+    padding: 50px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+        .login-right h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .login-right p {
+            margin: 0 0 25px 0;
+            color: #444;
+            font-size: 1.1rem;
+        }
+        .login-form label {
+            font-size: 0.98rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .login-form input[type="username"],
+        .login-form input[type="password"] {
+            flex: 1;
+            padding: 10px 12px;
+            width: 100%;
+            border: 1px solid #cfd8dc;
+            border-radius: 5px;
+            font-size: 1rem;
+            background: #f7fafd;
+            box-sizing: border-box;
+        }
+        .login-form .remember-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            margin-bottom: 14px;
+        }
+        .login-form .remember-row label {
+            font-size: 0.95rem;
+            font-weight: 400;
+            margin: 8px;
+        }
+        .login-form .forgot {
+            font-size: 0.95rem;
+            color: #2d6cdf;
+            justify-content: center;
+            text-decoration: none;
+        }
+        .login-form button {
+            width: 100%;
+            background: #2d6cdf;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 16px;
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 10px 0 16px 0;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #d1d5db;
+        }
+        .divider:not(:empty)::before {
+            margin-right: .75em;
+        }
+        .divider:not(:empty)::after {
+            margin-left: .75em;
+        }
+        .social-login {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+        .social-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f5f7fa;
+            border: 1px solid #cfd8dc;
+            border-radius: 6px;
+            padding: 8px 18px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .social-btn:hover {
+            background: #e6ecfa;
+        }
+       /* Mobile View */
+@media (max-width: 768px) {
+    .login-box {
+        flex-direction: column;
+        max-width: 95vw;
+        height: auto;
+    }
+
+    .login-left {
+        width: 100%;
+        padding: 24px 0;
+    }
+
+    .login-right {
+        padding: 30px 20px;
+    }
+
+    .login-right h2 {
+        font-size: 1.4rem;
+    }
+
+    .login-right p {
+        font-size: 1rem;
+    }
+}
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .login-box {
+        flex-direction: column;
+        max-width: 95vw;
+        height: auto;
+    }
+
+    .login-left {
+        width: 100%;
+        padding: 20px 0;
+    }
+
+    .login-left img {
+        width: 120px;   /* ✅ smaller images on mobile */
+        margin-bottom: 15px;
+    }
+
+    .login-right {
+        padding: 25px 18px;
+    }
+
+    .login-right h2 {
+        font-size: 1.3rem;
+    }
+
+    .login-right p {
+        font-size: 0.95rem;
+    }
+
+    .login-form input {
+        font-size: 0.95rem;
+        padding: 8px 10px;
+    }
+
+    .login-form button {
+        font-size: 1rem;
+        padding: 10px 0;
+    }
+
+    .social-login {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .social-btn {
+        width: 100%; /* ✅ makes social buttons full width on small screens */
+        justify-content: center;
+    }
+}

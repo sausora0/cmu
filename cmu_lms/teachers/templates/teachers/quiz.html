@@ -1,0 +1,269 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .quiz-creator {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+        .quiz-creator h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .question-block input[type="text"],
+        .question-block textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .options-container .option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .options-container .option input {
+            flex-grow: 1;
+        }
+        .add-option-btn, .remove-question-btn {
+            background: none;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .controls button {
+            background-color: #42b72a;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        .submit-quiz-btn {
+            background-color: #1877f2;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #1877f2; /* Updated to match Save Quiz button style */
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-block;
+            transition: 0.3s;
+        }
+        .back-button:hover {
+            background: #1565c0; /* Darker blue for hover */
+        }
+
+        .quiz-settings {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quiz-settings label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .quiz-settings select,
+        .quiz-settings input[type="number"] {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            flex-grow: 1;
+            max-width: 150px;
+        }
+        .quiz-settings input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            flex-grow: 2;
+            max-width: 300px;
+        }   
+
+        .quiz-settings button {
+            background: #42b72a; /* Updated to match green button style */
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .quiz-settings button:hover {
+            background: #36a420; /* Darker green for hover */
+        }
+    </style>
+</head>
+<body>
+     <a href="{% url 'teachers:subject' class_obj.id %}" class="back-button">Back to Classwork</a>
+    <div class="quiz-creator">
+        <h1>Create a Questionnaire</h1>
+
+        <div class="quiz-settings">
+            <label for="quiz-title">Title:</label>
+            <input type="text" id="quiz-title" name="title" form="quiz-form" placeholder="Enter quiz/exam title" required>
+            <label for="quiz-description">Description:</label>
+            <input type="text" id="quiz-description" name="description" form="quiz-form" placeholder="Enter description (optional)">
+            <label for="quiz-duration">Duration (mins):</label>
+            <input type="number" id="quiz-duration" name="duration" form="quiz-form" min="1" max="180" value="30" required>
+            <label for="quiz-type">Type:</label>
+            <select name="quiz_type" id="quiz-type" form="quiz-form">
+                <option value="quiz">Quiz</option>
+                <option value="exam">Exam</option>
+            </select>
+
+            <label for="num-questions">Number of Questions:</label>
+            <input type="number" id="num-questions" min="1" max="100" value="1">
+            <button type="button" id="generate-questions-btn">Generate Questions</button>
+            <button type="button" onclick="resetQuizForm()" style="background-color: #f57c00; color: #fff;">
+    Restart Quiz
+</button>
+        </div>
+
+        <div class="controls">
+            <button type="button" onclick="addQuestion('multiple-choice')">Add Multiple Choice</button>
+            <button type="button" onclick="addQuestion('identification')">Add Identification</button>
+            <button type="button" onclick="addQuestion('essay')">Add Essay</button>
+        </div>
+
+        <!-- ✅ Post form to backend -->
+        <form id="quiz-form" method="post">
+            {% csrf_token %}
+            <div id="questions-container"></div>
+            <button type="submit" class="submit-quiz-btn">Save</button>
+        </form>
+    </div>
+
+    <script>
+        let questionCounter = 0;
+
+        function addQuestion(type) {
+            questionCounter++;
+            const container = document.getElementById('questions-container');
+            const questionBlock = document.createElement('div');
+            questionBlock.className = 'question-block';
+            questionBlock.id = 'question-' + questionCounter;
+
+            let content = `
+                <label>Question ${questionCounter}:</label>
+                <input type="text" name="question_text_${questionCounter}" placeholder="Enter your question" required>
+                <input type="hidden" name="question_type_${questionCounter}" value="${type}">
+                <button type="button" class="remove-question-btn" onclick="removeQuestion(${questionCounter})">Remove Question</button>
+            `;
+
+            if (type === 'multiple-choice') {
+                content += `
+                    <div class="options-container" id="options-${questionCounter}">
+                        <div class="option">
+                            <input type="radio" name="correct_option_${questionCounter}" value="0" checked>
+                            <input type="text" name="option_${questionCounter}_0" placeholder="Option 1" required>
+                        </div>
+                    </div>
+                    <button type="button" class="add-option-btn" onclick="addOption(${questionCounter})">Add Option</button>
+                `;
+            } else if (type === 'identification') {
+                content += `<input type="text" name="answer_${questionCounter}" placeholder="Enter the correct answer" required>`;
+            } else if (type === 'essay') {
+                content += `<textarea placeholder="Student will write their answer here" disabled></textarea>`;
+            }
+
+            questionBlock.innerHTML = content;
+            container.appendChild(questionBlock);
+        }
+
+        function removeQuestion(id) {
+            const questionBlock = document.getElementById('question-' + id);
+            questionBlock.remove();
+        }
+
+        function addOption(questionId) {
+            const optionsContainer = document.getElementById(`options-${questionId}`);
+            const optionCount = optionsContainer.children.length;
+            const newOption = document.createElement('div');
+            newOption.className = 'option';
+            newOption.innerHTML = `
+                <input type="radio" name="correct_option_${questionId}" value="${optionCount}">
+                <input type="text" name="option_${questionId}_${optionCount}" placeholder="Option ${optionCount + 1}" required>
+            `;
+            optionsContainer.appendChild(newOption);
+        }
+        document.getElementById('generate-questions-btn').addEventListener('click', function() {
+            const numQuestions = parseInt(document.getElementById('num-questions').value);
+            const questionsContainer = document.getElementById('questions-container');
+            questionsContainer.innerHTML = ''; // Clear existing questions
+            questionCounter = 0; // Reset counter
+
+            for (let i = 0; i < numQuestions; i++) {
+                addQuestion('multiple-choice'); // Default to multiple-choice
+            }
+        });
+        function resetQuizForm() {
+    if (confirm("Restarting will clear all fields and questions. Continue?")) {
+        document.getElementById('quiz-form').reset();
+        document.getElementById('questions-container').innerHTML = "";
+        questionCounter = 0;
+    }
+}
+        // ✅ REMOVE preventDefault to allow normal Django POST
+        // (so the backend view will save the quiz into DB)
+    </script>
+</body>
+</html>

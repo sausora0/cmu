@@ -1,0 +1,173 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Choose Role</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(180deg, #2a77ff, #6caeff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .role-container {
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+    }
+
+    /* Logo */
+    .role-container img {
+      width: 90px;
+      margin-bottom: 15px;
+    }
+
+    .role-container h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 30px;
+    }
+
+    .role-container h2 {
+      font-size: 16px;
+      color: #000;
+      margin-bottom: 20px;
+    }
+
+    /* Role options */
+    .role-options {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .role-option {
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+      font-size: 15px;
+    }
+
+    .role-option i {
+      font-size: 20px;
+      color: #333;
+      flex-shrink: 0;
+    }
+
+    .role-option.active {
+      border-color: #2a77ff;
+      background: #f0f8ff;
+      font-weight: bold;
+      color: #2a77ff;
+    }
+
+    .role-option.active i {
+      color: #2a77ff;
+    }
+
+    .role-option input[type="radio"] {
+      display: none;
+    }
+
+    /* Button */
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #2a77ff;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #1a5fd9;
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 480px) {
+      .role-container {
+        padding: 15px;
+      }
+      .role-container img {
+        width: 70px;
+      }
+      .role-container h1 {
+        font-size: 16px;
+      }
+      .role-container h2 {
+        font-size: 14px;
+      }
+      .role-option {
+        padding: 10px;
+        font-size: 14px;
+      }
+      .role-option i {
+        font-size: 18px;
+      }
+      button {
+        font-size: 15px;
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="role-container">
+    <!-- University Logo -->
+    <img src="{% static 'images/logo.png' %}" alt="CMU Logo">
+    <h1>CITY OF MALABON UNIVERSITY</h1>
+
+    <h2>Choose your Role</h2>
+    <form method="post" id="roleForm">
+      {% csrf_token %}
+      <div class="role-options">
+        <label class="role-option">
+          <input type="radio" name="role" value="student">
+          <i class="fa-solid fa-user-graduate"></i> Student
+        </label>
+        <label class="role-option">
+          <input type="radio" name="role" value="teacher">
+          <i class="fa-solid fa-chalkboard-teacher"></i> Teacher
+        </label>
+        <label class="role-option">
+          <input type="radio" name="role" value="parent">
+          <i class="fa-solid fa-people-roof"></i> Parent
+        </label>
+      </div>
+      <button type="submit">Sign in</button>
+    </form>
+  </div>
+
+  <script>
+    // Add active effect on click
+    document.querySelectorAll(".role-option").forEach(option => {
+      option.addEventListener("click", () => {
+        document.querySelectorAll(".role-option").forEach(opt => opt.classList.remove("active"));
+        option.classList.add("active");
+        option.querySelector("input").checked = true;
+      });
+    });
+  </script>
+</body>
+</html>

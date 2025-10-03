@@ -1,0 +1,861 @@
+{% load static %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMU LMS - Student Dashboard</title>
+    <link rel="stylesheet" href="{% static 'teachers/dashboard.css' %}">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<style>
+/* Sidebar core */
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, #1e40af, #3b82f6);
+    color: #fff;
+    height: 100vh;
+    position: fixed;
+    left: 0; top: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.28s cubic-bezier(.4,2,.7,.9);
+    overflow: hidden;
+}
+.sidebar.closed {
+    width: 65px;
+}
+.sidebar .logo {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.1);
+    transition: padding .3s;
+}
+.sidebar.closed .logo { padding: 20px 12px; }
+.logo img {
+    width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; transition: margin 0.3s;
+}
+.sidebar.closed .logo img { margin-right: 0; }
+.cmu-logo {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    white-space: nowrap;
+    transition: opacity 0.18s, width 0.18s;
+}
+.sidebar.closed .cmu-logo {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+/* Nav styles */
+.nav-menu { flex: 1; padding: 16px 0;}
+.nav-item {
+    display: flex; align-items: center; padding: 16px 24px;
+    color: white; text-decoration: none;
+    transition: all 0.22s;
+    font-size: 0.97rem; font-weight: 500;
+    white-space: nowrap;
+}
+.nav-item i { margin-right: 15px; color: white; min-width: 21px;}
+.sidebar.closed .nav-item { justify-content: center; padding: 16px 0; }
+.sidebar.closed .nav-item i { margin-right: 0;}
+.sidebar.closed .nav-item .nav-label { display: none; }
+.nav-item .nav-label { display: inline; transition: opacity 0.2s;}
+/* Hide nav-label if sidebar closed */
+.sidebar.closed .nav-item .nav-label { display: none; }
+
+/* Dropdown and teaching */
+.dropdown-container { position: relative; }
+.sidebar.closed .dropdown-container .teaching-header { justify-content: center; }
+.sidebar.closed .dropdown-arrow,
+.sidebar.closed .class-count,
+.sidebar.closed .teaching-content span,
+.sidebar.closed .teaching-content .nav-label { display: none !important; }
+.sidebar.closed .subjects-container { display: none !important; }
+.teaching-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.teaching-header:hover { transform: translateY(-1px); }
+.teaching-header.active { background: rgba(255,255,255,0.1); border-radius: 8px; }
+.teaching-content { display: flex; align-items: center; color: white; }
+.teaching-content i {
+    width: 32px; height: 32px; border-radius: 50%; margin-right: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 16px; color: white;
+}
+.dropdown-arrow { color: white; font-size: 14px; transition: transform 0.3s ease; }
+.dropdown-arrow.rotated { transform: rotate(180deg); }
+.subjects-container {
+    overflow: hidden; transition: max-height 0.4s ease, opacity 0.3s ease; max-height: 0; opacity: 0; margin-top: 0;
+}
+.subjects-container.expanded { max-height: 500px; opacity: 1; margin-top: 12px; }
+.subject-item {
+    display: flex; align-items: center; background: transparent; margin-bottom: 8px; padding: 14px 16px; border-radius: 50px; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);
+}
+.subject-item:last-child { margin-bottom: 0; }
+.subject-item:hover { background: rgba(255,255,255,0.1); transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
+.subject-avatar { width: 24px; height: 24px; border-radius: 50%; background: #74b9ff; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: 600; font-size: 12px; color: white;}
+.subject-content { flex: 1;}
+.subject-name { color: white; font-weight: 600; font-size: 16px; margin: 0;}
+.subject-details { color: rgba(255,255,255,0.7); font-size: 12px; margin: 2px 0 0 0;}
+.class-count { background: rgba(255,255,255,0.2); color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+.delete-subject-btn { background: rgba(220,38,38,0.8); color: white; border: none; width: 20px; height: 20px; border-radius: 50%; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; margin-left: 8px;}
+.delete-subject-btn:hover { background: rgba(220,38,38,1); transform: scale(1.1); }
+
+/* Sidebar hover trigger area */
+.sidebar-hover-area {
+    position: fixed;
+    left: 0; top: 0;
+    width: 22px; height: 100vh;
+    z-index: 1050;
+    background: transparent;
+}
+
+/* Main content */
+.main-content {
+    margin-left: 280px;
+    transition: margin-left 0.28s cubic-bezier(.4,2,.7,.9);
+}
+.sidebar.closed ~ .main-content {
+    margin-left: 65px;
+}
+
+/* ...Your other styles for cards, modal, grid, etc. can remain unchanged... */
+/* Grid container */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* responsive columns */
+  gap: 20px; /* space between cards */
+  padding: 20px;
+}
+
+/* Individual class card */
+.class-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+  overflow: visible;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 320px; /* keep them uniform */
+}
+
+/* Hover effect */
+.class-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+}
+
+/* Banner image */
+.class-banner img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+}
+
+/* Content */
+.class-content {
+  padding: 12px 15px;
+  flex-grow: 1; /* fill space */
+}
+
+.class-title {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.class-section {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Divider */
+.class-divider {
+  margin: 10px 0;
+  border: 0;
+  border-top: 1px solid #eee;
+}
+
+/* Footer */
+.class-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+  font-size: 14px;
+  position: relative;
+}
+
+/* Dropdown menu */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 120%;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+  min-width: 180px;
+  overflow: hidden;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu a {
+  display: block;
+  padding: 10px 14px;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.dropdown-menu a:hover {
+  background: #f5f5f5;
+}
+
+/* Show on click */
+.dropdown.open .dropdown-menu {
+  display: block;
+}
+.add-icon {
+  bottom: 30px;
+  right: 30px;
+  width: 40px;
+  height: 33px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 30px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 1100;
+}
+
+.add-icon:hover {
+  background: #6c63ff;
+  transform: scale(1.1);
+}
+/* Empty state message */
+#no-classes-msg {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #888888;
+    font-size: 1.1rem;
+    margin-top: 50px;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+    .grid-container {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+}
+
+
+/* Modal Background */
+.modal {
+  display: none; 
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+/* Modal Box */
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  width: 350px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  animation: fadeIn 0.3s ease;
+}
+
+/* Close Button */
+.close {
+  float: right;
+  font-size: 22px;
+  cursor: pointer;
+  color: #666;
+}
+.close:hover {
+  color: #000;
+}
+
+/* Input Field */
+.modal-content input {
+  width: 90%;
+  padding: 10px;
+  margin: 15px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* Submit Button */
+.modal-content button {
+  background: #4e54c8;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.modal-content button:hover {
+  background: #6c63ff;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+
+/* Container transition */
+.subjects-container {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, padding 0.3s ease-in-out;
+    padding: 0 10px;
+}
+
+.subjects-container.expanded {
+    max-height: 500px; /* enough to fit multiple classes */
+    padding: 10px;
+}
+
+/* Arrow rotation */
+.dropdown-arrow {
+    transition: transform 0.3s ease;
+}
+
+.dropdown-arrow.rotate {
+    transform: rotate(180deg);
+}
+
+/* Each class item */
+.subject-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    transition: background 0.2s;
+}
+
+.subject-item:hover {
+    background: #f2f2f268;
+}
+
+.delete-form {
+    margin-left: 10px;
+}
+
+.delete-btn {
+    background: transparent;
+    border: none;
+    color: #dc3545; /* red */
+    font-size: 18px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.delete-btn:hover {
+    color: #a71d2a; /* darker red on hover */
+}
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  width: 350px;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-cancel {
+  padding: 8px 14px;
+  border: none;
+  background: #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-unenroll {
+  padding: 8px 14px;
+  border: none;
+  background: #d32f2f;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+</style>
+<body>
+<!-- Sidebar Hover Area for mouse entry -->
+<div class="sidebar-hover-area" id="sidebarHoverArea"></div>
+<!-- Sidebar -->
+<div class="sidebar closed" id="sidebar">
+    <div class="logo">
+        <img src="{% static 'images/cmu.jpg' %}" alt="CMU Logo">
+        <div class="cmu-logo">City of Malabon University</div>
+    </div>
+    <nav class="nav-menu">
+        <a href="" class="nav-item"><i class="fas fa-home"></i><span class="nav-label">Home</span></a>
+        <a href="{% url 'students:calendar' %}" class="nav-item"><i class="fas fa-calendar"></i><span class="nav-label">Event Calendar</span></a>
+        <div class="dropdown-container">
+            <div class="teaching-header" id="teachingHeader">
+                <div class="teaching-content">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span class="nav-label">My Classes</span>
+                    <span class="class-count" id="classCount">{{ enrolled_classes|length }} classes</span>
+                </div>
+                <i class="fas fa-chevron-down dropdown-arrow" id="dropdownArrow"></i>
+            </div>
+            <div class="subjects-container" id="subjectsContainer">
+               {% if enrolled_classes %}
+    {% for class in enrolled_classes %}
+      <div class="subject-item" onclick="location.href='{% url 'students:class_detail' class.id %}'">
+        <div class="subject-avatar">{{ class.class_name|first|upper }}</div>
+        <div class="subject-info">
+          <div class="subject-name">{{ class.class_name }}</div>
+          <div class="subject-details">{{ class.section|default:"No section" }}</div>
+        </div>
+                     
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-state" id="emptyState">
+                No enrolled classes created yet.
+            </div>
+            {% endif %}
+        </div>
+        </div>
+        <a href="{% url 'students:student_announcements' %}" class="nav-item"><i class="fas fa-bullhorn"></i><span class="nav-label">Announcement</span></a>
+        <a href="{% url 'students:messages_inbox' %}" class="nav-item"><i class="fas fa-comments"></i><span class="nav-label">Messages</span></a>
+        <a href="{% url 'students:archived_classes' %}" class="nav-item"><i class="fas fa-archive"></i><span class="nav-label">Archived Classes</span></a>
+        <a href="#" class="nav-item"><i class="fas fa-cog"></i><span class="nav-label">Settings</span></a>
+        <a href="{% url 'account_logout' %}" class="nav-item"><i class="fas fa-sign-out-alt"></i><span class="nav-label">Logout</span></a>
+    </nav>
+</div>
+
+<!-- Main Content Area -->
+<div class="main-content">
+    <!-- ...[Your main content unchanged]... -->
+    <!-- Header -->
+    <header class="header">
+        <div class="search-bar"></div>
+        <div class="header-right">
+            <!-- Floating Add Button -->
+            <div class="add-icon" title="Join Class" onclick="openModal()"><span>➕</span></div>
+            <i class="fas fa-bell notification-icon"></i>
+            <div class="user-profile">
+                <span>{{ user.first_name }}</span>
+                <div class="user-avatar">
+                    {% if user.profile and user.profile.avatar %}
+                        <img src="{{ user.profile.avatar }}" alt="User Avatar">
+                    {% else %}
+                        <img src="{% static 'images/user.jpg' %}" alt="User Avatar">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content-area">
+        <div class="welcome-banner">
+            <div class="welcome-content">
+                <h2>Welcome back, {{ user.first_name }}!</h2>
+                <p>Always stay updated in your student progress</p>
+            </div>
+            <i class="fas fa-rocket fa-2x"></i>
+        </div>
+
+        <div class="grid-container" id="class-grid">
+        {% for class in classes %}
+       <div class="class-card">
+            {% if class.banner or class.theme %}
+                <div class="class-banner">
+                    <img src="{{ class.get_banner_url }}" alt="{{ class.class_name }}">
+                </div>
+            {% endif %}
+
+            <!-- Class info -->
+            <div class="class-content" onclick="location.href='{% url 'students:class_detail' class.id %}'">
+                <div class="class-title">{{ class.subject_name }}</div>
+                <div class="class-title">{{ class.class_name }}-{{ class.section|default:'—' }}</div>
+                <div class="class-teacher">{{ class.teacher.get_full_name|default:class.teacher.username }}</div>
+
+                <hr class="class-divider" />
+            </div>
+                <div class="class-footer">
+                <a href="#"><i class="fa-solid fa-folder" title="GoogleDrive"></i></a>
+                <a href="#"><i class="fa-solid fa-clipboard-check" title="Marks"></i></a>
+                <!-- Dropdown wrapper -->
+                    <div class="dropdown">
+                        <a href="javascript:void(0)" class="toggle-options">
+                            <i class="fa-solid fa-ellipsis-vertical" title="More Options"></i>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="#">Move</a>
+                            <a href="javascript:void(0)" class="archive-btn" data-class="{{ class.id }}">Archive Class</a>
+                            <a href="javascript:void(0)" class="unenroll-btn" data-class="{{ class.id }}">Unenroll</a> <!-- ✅ -->
+                        </div>
+                    </div>
+                </div>
+        </div>
+    {% empty %}
+        <p id="no-classes-msg">No classes yet. Join one!</p>
+    {% endfor %}
+</div>
+
+    </div>
+</div>
+<!-- Modal -->
+<div id="unenrollModal" class="modal">
+  <div class="modal-content">
+    <h3>Unenroll</h3>
+    <p>You will be removed from this class.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel">Cancel</button>
+      <form id="unenrollForm" method="post" action="{% url 'students:unenroll_class' %}">
+        {% csrf_token %}
+        <input type="hidden" name="class_id" id="unenrollClassId">
+        <button type="submit" class="btn-unenroll">Unenroll</button>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Archive Modal -->
+<div id="archiveModal" class="modal">
+  <div class="modal-content">
+    <h3>Archive Class</h3>
+    <p>This class will be moved to archived classes.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel-archive">Cancel</button>
+      <form id="archiveForm" method="post" action="{% url 'students:archive_class' %}">
+        {% csrf_token %}
+        <input type="hidden" name="class_id" id="archiveClassId">
+        <button type="submit" class="btn-archive">Archive</button>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Join Class Modal -->
+<div id="joinClassModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h2>Join a Class</h2>
+    <form id="joinClassForm">
+      {% csrf_token %}
+      <label for="class_code">Enter Class Code:</label>
+      <input type="text" id="class_code" name="code" placeholder="e.g. ABC123" required>
+      <button type="submit">Join</button>
+    </form>
+    <div id="joinClassMessage" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<script>
+  const archiveModal = document.getElementById("archiveModal");
+const archiveForm = document.getElementById("archiveForm");
+const archiveClassId = document.getElementById("archiveClassId");
+
+document.querySelectorAll(".archive-btn").forEach(btn => {
+  btn.addEventListener("click", function() {
+    archiveClassId.value = this.dataset.class;
+    archiveModal.style.display = "flex";
+  });
+});
+
+document.querySelector(".btn-cancel-archive").addEventListener("click", function() {
+  archiveModal.style.display = "none";
+});
+
+window.addEventListener("click", function(e) {
+  if (e.target === archiveModal) {
+    archiveModal.style.display = "none";
+  }
+});
+const modal = document.getElementById("unenrollModal");
+const unenrollForm = document.getElementById("unenrollForm");
+const unenrollClassId = document.getElementById("unenrollClassId");
+
+// Open modal when clicking Unenroll
+document.querySelectorAll(".unenroll-btn").forEach(btn => {
+  btn.addEventListener("click", function() {
+    unenrollClassId.value = this.dataset.class;
+    modal.style.display = "flex";
+  });
+});
+
+// Close modal on Cancel
+document.querySelector(".btn-cancel").addEventListener("click", function() {
+  modal.style.display = "none";
+});
+
+// Close modal when clicking outside
+window.addEventListener("click", function(e) {
+  if (e.target === modal) {
+    modal.style.display = "none";
+  }
+});
+document.querySelectorAll(".toggle-options").forEach(toggle => {
+    toggle.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Close others
+        document.querySelectorAll(".dropdown").forEach(d => d.classList.remove("open"));
+
+        // Open this one
+        this.closest(".dropdown").classList.toggle("open");
+    });
+});
+
+// Close when clicking outside
+document.addEventListener("click", function() {
+    document.querySelectorAll(".dropdown").forEach(d => d.classList.remove("open"));
+});
+// Modal functions
+function openModal() { document.getElementById("joinClassModal").style.display = "flex"; }
+function closeModal() { document.getElementById("joinClassModal").style.display = "none"; }
+window.onclick = function(event) {
+  const modal = document.getElementById("joinClassModal");
+  if (event.target === modal) modal.style.display = "none";
+}
+
+// AJAX join
+document.getElementById("joinClassForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const codeInput = document.getElementById("class_code");
+  const messageDiv = document.getElementById("joinClassMessage");
+
+  fetch("{% url 'students:join_class_ajax' %}", {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams({ code: codeInput.value })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if(data.status === "success"){
+      messageDiv.style.color = "green";
+      messageDiv.innerText = data.message;
+
+      // Update sidebar
+      const subjectsContainer = document.getElementById("subjectsContainer");
+      const emptyState = document.getElementById("emptyState");
+      if(emptyState) emptyState.remove();
+      const newClassLink = document.createElement("a");
+      newClassLink.href = `/students/class/${data.class.id}/`;
+      newClassLink.classList.add("nav-item", "enrolled-class");
+      newClassLink.innerText = `${data.class.name} - ${data.class.section}`;
+      subjectsContainer.appendChild(newClassLink);
+
+      // Update class count
+      document.getElementById("classCount").innerText = data.class_count + " classes";
+
+      // Update grid
+      const grid = document.getElementById("class-grid");
+      const newCard = document.createElement("div");
+      newCard.classList.add("class-card");
+      newCard.id = `grid-class-${data.class.id}`;
+      newCard.innerHTML = `
+        <div class="class-banner"><img src="${data.class.banner}" alt="${data.class.name}"></div>
+        <div class="class-title">${data.class.name}</div>
+        <div class="class-section">Section ${data.class.section} - •</div>
+      `;
+      grid.appendChild(newCard);
+
+      // Remove "No classes yet" message if it exists
+      const noClassesMsg = document.getElementById("no-classes-msg");
+      if (noClassesMsg) noClassesMsg.remove();
+
+      // Clear input
+      codeInput.value = "";
+      closeModal();
+    } else {
+      messageDiv.style.color = "red";
+      messageDiv.innerText = data.message;
+    }
+  })
+  .catch(err => console.log(err));
+});
+
+// Archive class
+function archiveClass(event, classId) {
+  event.stopPropagation();
+  if(!confirm("Are you sure you want to archive this class?")) return;
+
+  fetch(`/students/archive_class/${classId}/`, {
+    method: "POST",
+    headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if(data.status === "success") {
+      // Remove from sidebar
+      const sidebarItem = document.getElementById(`sidebar-class-${classId}`);
+      if(sidebarItem) sidebarItem.remove();
+
+      // Remove from main dashboard grid
+      const dashboardCard = document.getElementById(`grid-class-${classId}`);
+      if(dashboardCard) dashboardCard.remove();
+
+      // Update count
+      const countElem = document.getElementById("classCount");
+      const newCount = parseInt(countElem.innerText) - 1;
+      countElem.innerText = newCount + " classes";
+
+      // Show empty state if no classes remain
+      const container = document.getElementById("subjectsContainer");
+      if(container.children.length === 0){
+        const emptyDiv = document.createElement("div");
+        emptyDiv.id = "emptyState";
+        emptyDiv.className = "empty-state";
+        emptyDiv.innerText = "No enrolled classes yet.";
+        container.appendChild(emptyDiv);
+        container.classList.remove("expanded");
+        document.getElementById("dropdownArrow").classList.remove("rotated");
+      }
+
+    } else {
+      alert(data.message);
+    }
+  }).catch(err => console.log(err));
+}
+
+
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl)
+})
+// Sidebar open/close logic with hover area
+const sidebar = document.getElementById('sidebar');
+const hoverArea = document.getElementById('sidebarHoverArea');
+let sidebarHovered = false;
+let hoverTimeout = null;
+
+function openSidebar() {
+    sidebar.classList.remove('closed');
+}
+function closeSidebar() {
+    sidebar.classList.add('closed');
+    // Close dropdown if open
+    const subjectsContainer = document.getElementById('subjectsContainer');
+    const dropdownArrow = document.getElementById('dropdownArrow');
+    subjectsContainer.classList.remove('expanded');
+    dropdownArrow.classList.remove('rotated');
+}
+
+sidebar.addEventListener('mouseenter', () => {
+    sidebarHovered = true;
+    openSidebar();
+    if (hoverTimeout) clearTimeout(hoverTimeout);
+});
+sidebar.addEventListener('mouseleave', () => {
+    sidebarHovered = false;
+    hoverTimeout = setTimeout(() => {
+        if (!sidebarHovered) closeSidebar();
+    }, 150);
+});
+hoverArea.addEventListener('mouseenter', () => {
+    sidebarHovered = true;
+    openSidebar();
+    if (hoverTimeout) clearTimeout(hoverTimeout);
+});
+hoverArea.addEventListener('mouseleave', () => {
+    sidebarHovered = false;
+    hoverTimeout = setTimeout(() => {
+        if (!sidebarHovered) closeSidebar();
+    }, 150);
+});
+
+// Teaching dropdown logic (only opens if sidebar is open)
+const teachingHeader = document.getElementById("teachingHeader");
+const subjectsContainer = document.getElementById("subjectsContainer");
+const dropdownArrow = document.getElementById("dropdownArrow");
+let teachingDropdownOpen = false;
+teachingHeader.addEventListener("click", function(e) {
+    if (sidebar.classList.contains('closed')) return;
+    subjectsContainer.classList.toggle("expanded");
+    dropdownArrow.classList.toggle("rotated");
+    teachingDropdownOpen = subjectsContainer.classList.contains("expanded");
+});
+
+// Dropdown for class card settings (unchanged)
+document.addEventListener("DOMContentLoaded", () => {
+    const dropdowns = document.querySelectorAll(".dropdown");
+    dropdowns.forEach(dropdown => {
+        const toggle = dropdown.querySelector(".toggle-options");
+        toggle.addEventListener("click", (e) => {
+            e.preventDefault();
+            dropdown.classList.toggle("active");
+        });
+        document.addEventListener("click", (e) => {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove("active");
+            }
+        });
+    });
+});
+
+</script>
+</body>
+</html>

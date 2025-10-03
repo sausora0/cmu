@@ -1,0 +1,9 @@
+<h2>Parent-Student Links</h2>
+<a href="{% url 'parent_student_add' %}">+ Link Parent to Student</a>
+<ul>
+  {% for link in links %}
+    <li>{{ link.parent.get_full_name }} → {{ link.student.get_full_name }}
+      <a href="{% url 'parent_student_delete' link.id %}">Remove</a>
+    </li>
+  {% endfor %}
+</ul>

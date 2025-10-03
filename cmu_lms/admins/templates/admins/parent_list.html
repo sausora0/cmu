@@ -1,0 +1,9 @@
+<h2>Parents</h2>
+<a href="{% url 'parent_add' %}">+ Add Parent</a>
+<ul>
+  {% for p in parents %}
+    <li>{{ p.get_full_name }} ({{ p.email }})
+      <a href="{% url 'parent_delete' p.id %}">Delete</a>
+    </li>
+  {% endfor %}
+</ul>

@@ -1,0 +1,41 @@
+{% load static %}
+{% load quiz_extras %}
+
+<h4>{{ quiz.title }} ({{ quiz.get_quiz_type_display }})</h4>
+
+{% for question in quiz.questions.all %}
+  <div class="quiz-question-card">
+    <div class="quiz-question-number">
+      <span>Q{{ forloop.counter }}:</span>
+    </div>
+    <div class="quiz-question-text">
+      {{ question.text }}
+    </div>
+
+    {% with prev_answer=question|get_answer:request.user %}
+      {% if quiz_submitted %}
+        <p><strong>Your Answer:</strong> {{ prev_answer|default:"No answer" }}</p>
+      {% else %}
+        {% if question.question_type == "multiple-choice" %}
+          {% for option in question.options.all %}
+            <div class="form-check">
+              <input type="radio" class="form-check-input"
+                     name="question_{{ question.id }}"
+                     value="{{ option.id }}" id="opt{{ option.id }}">
+              <label class="form-check-label" for="opt{{ option.id }}">
+                {{ option.text }}
+              </label>
+            </div>
+          {% endfor %}
+        {% elif question.question_type == "identification" %}
+          <input type="text" class="form-control"
+                 name="question_{{ question.id }}" placeholder="Type your answer">
+        {% elif question.question_type == "essay" %}
+          <textarea class="form-control" name="question_{{ question.id }}" rows="4"
+                    placeholder="Write your essay here"></textarea>
+        {% endif %}
+      {% endif %}
+    {% endwith %}
+  </div>
+{% endfor %}
+
